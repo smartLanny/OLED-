@@ -18,12 +18,16 @@ const RUNTIME_ASSETS = new Set([
   'app.css',
   'vendor/react.js',
   'vendor/react-dom.js',
+  'vendor/LICENSE-react.txt',
+  'assets/test-icons.png',
 ]);
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8',
+  '.png': 'image/png',
 };
 
 function listLanIPs() {
