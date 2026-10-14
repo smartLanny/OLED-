@@ -16,6 +16,8 @@ const SOLIDS = [['黑', '#000000'], ['白', '#ffffff'], ['红', '#ff0000'], ['�
 function Icon({ name }) {
   const shapes = {
     back: <path d="m14 6-6 6 6 6M8 12h13" />,
+    right: <path d="M3 12h17m-6-6 6 6-6 6" />,
+    up: <path d="M12 21V4m-6 6 6-6 6 6" />,
     down: <path d="M12 3v17m-6-6 6 6 6-6" />,
     next: <path d="m9 5 7 7-7 7" />,
     close: <path d="m6 6 12 12M6 18 18 6" />,
@@ -43,7 +45,7 @@ function Level({ label, value, onChange }) {
 }
 
 // Double-tap opens the complete floating panel; its visibility controls motion.
-function TestShell({ title, onExit, children, controls, help }) {
+function TestShell({ title, tone, onExit, children, controls, help }) {
   const [visible, setVisible] = useState(false);
   const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement));
   const [notice, setNotice] = useState('');
@@ -127,7 +129,7 @@ function TestShell({ title, onExit, children, controls, help }) {
     const [dx, dy] = offsets[e.key];
     setPanelPosition(clampPosition({ x: panelRef.current.offsetLeft + dx, y: panelRef.current.offsetTop + dy }));
   };
-  return <main className="test-shell" ref={shellRef}
+  return <main className={`test-shell tone-${tone}`} ref={shellRef}
     onMouseDownCapture={e => { if (suppressClick.current) e.preventDefault(); }}
     onClickCapture={e => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation(); suppressClick.current = false; } }}
     onPointerDown={pointerDown} onPointerUp={pointerUp}
@@ -158,7 +160,8 @@ function SmearRunner({ state }) {
   const unit = useRef(null);
   const position = useRef(0);
   const [size, setSize] = useState(0);
-  const vertical = state.direction === 'vertical';
+  const vertical = state.vertical;
+  const offsetAt = distance => state.reverse ? -distance : -size + distance;
   useLayoutEffect(() => {
     position.current = 0;
     const measure = () => {
@@ -173,9 +176,9 @@ function SmearRunner({ state }) {
   useLayoutEffect(() => {
     if (!size) return;
     position.current %= size;
-    const offset = vertical ? -size + position.current % size : -(position.current % size);
+    const offset = offsetAt(position.current % size);
     track.current.style.transform = vertical ? `translate3d(0,${offset}px,0)` : `translate3d(${offset}px,0,0)`;
-  }, [size, vertical, state.mode, state.fontSize]);
+  }, [size, vertical, state.reverse, state.mode, state.fontSize]);
   useEffect(() => {
     let frame;
     let last = null;
@@ -186,7 +189,7 @@ function SmearRunner({ state }) {
         if (dt < 0.25) position.current = (position.current + state.speed * dt) % size;
       }
       last = time;
-      const offset = vertical ? -size + position.current : -position.current;
+      const offset = offsetAt(position.current);
       track.current.style.transform = vertical ? `translate3d(0,${offset}px,0)` : `translate3d(${offset}px,0,0)`;
       frame = requestAnimationFrame(draw);
     };
@@ -197,7 +200,7 @@ function SmearRunner({ state }) {
     sync();
     document.addEventListener('visibilitychange', sync);
     return () => { cancelAnimationFrame(frame); document.removeEventListener('visibilitychange', sync); };
-  }, [state.isPlaying, state.speed, size, vertical]);
+  }, [state.isPlaying, state.speed, state.reverse, size, vertical]);
   return <div className="test-surface smear-surface" style={{ background: gray(state.bg), color: gray(state.fg) }}>
     <div ref={track} className={`smear-track ${vertical ? 'vertical' : 'horizontal'}`} aria-hidden="true">
       {[0, 1].map(copy => <div className="smear-unit" key={copy} ref={copy === 0 ? unit : null}>
@@ -209,34 +212,42 @@ function SmearRunner({ state }) {
   </div>;
 }
 function SmearTest({ onExit }) {
-  const [state, setState] = useState({ speed: 480, mode: 'text', direction: 'horizontal', bg: 0, fg: 25, fontSize: 40 });
+  const [vertical, setVertical] = useState(() => !window.matchMedia('(orientation: landscape)').matches);
+  useEffect(() => {
+    const orientation = window.matchMedia('(orientation: landscape)');
+    const changed = () => setVertical(!orientation.matches);
+    changed();
+    orientation.addEventListener('change', changed);
+    return () => orientation.removeEventListener('change', changed);
+  }, []);
+  const [state, setState] = useState({ speed: 480, mode: 'text', reverse: false, bg: 0, fg: 25, fontSize: 40 });
   const update = patch => setState(s => ({ ...s, ...patch }));
-  return <TestShell title="拖影测试" onExit={onExit} help={<p>速度单位为 CSS 像素 / 秒。此页面用于目视观察，不直接测量响应时间或刷新率。</p>} controls={<>
+  return <TestShell tone="smear" title="拖影测试" onExit={onExit} help={<p>竖屏上下滚动，横屏左右滚动。速度单位为 CSS 像素 / 秒。此页面用于目视观察，不直接测量响应时间或刷新率。</p>} controls={<>
     <fieldset><legend>速度 · px/s</legend><div className="choices two">{[240, 480, 960, 1920].map(speed => <Choice key={speed} active={speed === state.speed} onClick={() => update({ speed })}>{speed} px/s</Choice>)}</div></fieldset>
-    <fieldset><legend>方向</legend><div className="choices two"><Choice active={state.direction === 'horizontal'} onClick={() => update({ direction: 'horizontal' })}><span className="icon-label"><Icon name="back" />向左</span></Choice><Choice active={state.direction === 'vertical'} onClick={() => update({ direction: 'vertical' })}><span className="icon-label"><Icon name="down" />向下</span></Choice></div></fieldset>
+    <fieldset><legend>滚动方向</legend><div className="choices two"><Choice active={!state.reverse} onClick={() => update({ reverse: false })}><span className="icon-label"><Icon name={vertical ? 'down' : 'right'} />{vertical ? '向下' : '向右'}</span></Choice><Choice active={state.reverse} onClick={() => update({ reverse: true })}><span className="icon-label"><Icon name={vertical ? 'up' : 'back'} />{vertical ? '向上' : '向左'}</span></Choice></div></fieldset>
     <fieldset><legend>内容</legend><div className="choices two"><Choice active={state.mode === 'text'} onClick={() => update({ mode: 'text' })}>文字</Choice><Choice active={state.mode === 'block'} onClick={() => update({ mode: 'block' })}>纯色方块</Choice></div></fieldset>
     {state.mode === 'text' && <label className="select-label">字号<select value={state.fontSize} onChange={e => update({ fontSize: Number(e.target.value) })}>{[24, 40, 64].map(v => <option key={v} value={v}>{v} CSS px</option>)}</select></label>}
     <fieldset><legend>灰阶预设 · 背景 / 前景</legend><div className="choices">{PRESETS.map(([label, bg, fg]) => <Choice key={label} active={state.bg === bg && state.fg === fg} onClick={() => update({ bg, fg })}>{label}</Choice>)}</div></fieldset>
     <Level label="背景灰阶" value={state.bg} onChange={bg => update({ bg })} /><Level label="前景灰阶" value={state.fg} onChange={fg => update({ fg })} />
     {state.bg === state.fg && <p className="hint">前景与背景相同，当前没有可见边缘。</p>}
 
-  </>}>{panelOpen => <SmearRunner state={{ ...state, isPlaying: !panelOpen }} />}</TestShell>;
+  </>}>{panelOpen => <SmearRunner state={{ ...state, vertical, isPlaying: !panelOpen }} />}</TestShell>;
 }
 
 function PatternTest({ onExit }) {
   const [pattern, setPattern] = useState('gradient');
   const [solid, setSolid] = useState('#000000');
   const backgrounds = {
-    gradient: 'linear-gradient(to right, #000, #fff)', dark: 'linear-gradient(to right, #000, #404040)',
-    expanded: 'linear-gradient(to right, #000 0%, #050505 10%, #0f0f0f 20%, #1e1e1e 30%, #333 40%, #4d4d4d 50%, #707070 60%, #909090 70%, #b0b0b0 80%, #d0d0d0 90%, #fff 100%)', solid,
+    gradient: 'linear-gradient(to bottom, #000, #fff)', dark: 'linear-gradient(to bottom, #000, #404040)',
+    expanded: 'linear-gradient(to bottom, #000 0%, #050505 10%, #0f0f0f 20%, #1e1e1e 30%, #333 40%, #4d4d4d 50%, #707070 60%, #909090 70%, #b0b0b0 80%, #d0d0d0 90%, #fff 100%)', solid,
   };
-  return <TestShell title="色阶与纯色" onExit={onExit} help={<p>近黑分档从左到右：G0、1、2、3、4、6、8、12、16、24、32、48。隐藏面板后观察。</p>} controls={<>
+  return <TestShell tone="pattern" title="色阶与纯色" onExit={onExit} help={<p>近黑分档从上到下：G0、1、2、3、4、6、8、12、16、24、32、48。隐藏面板后观察。</p>} controls={<>
     <fieldset><legend>图案</legend><div className="choices two">{PATTERNS.map(([id, title]) => <Choice key={id} active={pattern === id} onClick={() => setPattern(id)}><span>{title}</span></Choice>)}</div></fieldset>
     {pattern === 'solid' && <fieldset><legend>纯色</legend><div className="choices three">{SOLIDS.map(([name, value]) => <Choice key={name} active={solid === value} onClick={() => setSolid(value)}>{name}</Choice>)}</div><label className="select-label">自定义颜色<input aria-label="自定义颜色" type="color" value={solid} onChange={e => setSolid(e.target.value)} /></label></fieldset>}
   </>}>
     <div className="test-surface pattern-surface" data-pattern={pattern} style={{ background: backgrounds[pattern] || '#000' }}>
       {pattern === 'steps' && <div className="gray-steps">{[0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48].map(value => <div key={value} style={{ background: gray(value) }} />)}</div>}
-      {pattern === 'spectrum' && <div className="spectrum">{['#f00', '#0f0', '#00f', '#0ff', '#f0f', '#ff0'].map(color => <div key={color} style={{ background: `linear-gradient(to right, ${color}, #000)` }} />)}</div>}
+      {pattern === 'spectrum' && <div className="spectrum">{['#f00', '#0f0', '#00f', '#0ff', '#f0f', '#ff0'].map(color => <div key={color} style={{ background: `linear-gradient(to bottom, ${color}, #000)` }} />)}</div>}
     </div>
   </TestShell>;
 }
@@ -262,7 +273,7 @@ function APLTest({ onExit }) {
     return () => observer.disconnect();
   }, [area]);
   const signalMean = (area / 100 * box + (1 - area / 100) * background) / 255 * 100;
-  return <TestShell title="APL 窗口" onExit={onExit} help={<><p>面积以当前网页区域为分母。测量前收起面板，避免面板自身发光影响读数。</p><p>平均信号电平按 8 位码值与面积加权，不是实测亮度或线性光 APL。</p></>} controls={<>
+  return <TestShell tone="apl" title="APL 窗口" onExit={onExit} help={<><p>面积以当前网页区域为分母。测量前收起面板，避免面板自身发光影响读数。</p><p>平均信号电平按 8 位码值与面积加权，不是实测亮度或线性光 APL。</p></>} controls={<>
     <fieldset><legend>窗口面积比例</legend><div className="choices area-choices">{AREAS.map(value => <Choice key={value} active={value === area} onClick={() => setArea(value)}>{value}%</Choice>)}</div></fieldset>
     <Level label="窗口灰阶" value={box} onChange={setBox} /><Level label="底色灰阶" value={background} onChange={setBackground} />
     <div className="metric"><span>平均信号电平</span><output>{signalMean.toFixed(2)}%</output></div>
@@ -313,7 +324,7 @@ function App() {
     {view === 'menu' && <main className="menu"><div className="menu-inner">
       <h1>装机宅OLED测试</h1>
       <div className="test-cards">
-        {MENU_TESTS.map(test => <button key={test.id} className="test-card" onClick={() => enter(test.id)}>
+        {MENU_TESTS.map(test => <button key={test.id} className={`test-card tone-${test.id}`} onClick={() => enter(test.id)}>
           <span className="test-art" aria-hidden="true" style={{ backgroundPosition: `${test.position} center` }} />
           <span className="card-title">{test.title}</span><Icon name="next" />
         </button>)}
