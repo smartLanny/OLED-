@@ -1,8 +1,8 @@
 const { useState, useEffect, useLayoutEffect, useRef } = React;
 const gray = value => `rgb(${value}, ${value}, ${value})`;
 const PRESETS = [
-  ['近黑 G0 / G15', 0, 15], ['近黑 G0 / G25', 0, 25], ['低灰 G0 / G50', 0, 50],
-  ['夜间 G18 / G220', 18, 220], ['白底 G255 / G0', 255, 0],
+  ['极低灰阶', 0, 15], ['低灰阶', 0, 25], ['中低灰阶', 0, 50],
+  ['夜间模式', 18, 220], ['白底黑字', 255, 0],
 ];
 const AREAS = [1, 2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100];
 const TEXTS = ['The quick brown fox jumps over the lazy dog. 0123456789', '天地玄黄 宇宙洪荒 日月盈昃 辰宿列张', 'OLED BLACK SMEAR / 灰阶响应观察'];
@@ -15,6 +15,9 @@ const SOLIDS = [['黑', '#000000'], ['白', '#ffffff'], ['红', '#ff0000'], ['�
 
 function Icon({ name }) {
   const shapes = {
+    settings: <><path d="M4 6h4m4 0h8M4 12h10m4 0h2M4 18h2m4 0h10" /><circle cx="10" cy="6" r="2" /><circle cx="16" cy="12" r="2" /><circle cx="8" cy="18" r="2" /></>,
+    text: <path d="M5 7V4h14v3M12 4v16m-4 0h8" />,
+    block: <rect x="4" y="5" width="16" height="14" rx="2" />,
     back: <path d="m14 6-6 6 6 6M8 12h13" />,
     right: <path d="M3 12h17m-6-6 6 6-6 6" />,
     up: <path d="M12 21V4m-6 6 6-6 6 6" />,
@@ -38,10 +41,12 @@ function Choice({ active, children, ...props }) {
 }
 function Level({ label, value, onChange }) {
   const id = React.useId();
-  return <div className="level"><label htmlFor={id}>{label}<output>G{value}</output></label>
-    <div className="level-inputs"><input id={id} type="range" min="0" max="255" step="1" value={value} onChange={e => onChange(Number(e.target.value))} />
-      <input type="number" aria-label={`${label}数值`} min="0" max="255" step="1" value={value}
-        onChange={e => { if (e.target.value !== '') onChange(Math.max(0, Math.min(255, Math.round(Number(e.target.value))))); }} /></div></div>;
+  return <div className="level">
+    <div className="level-heading"><label htmlFor={id}>{label}</label>
+      <input type="number" inputMode="numeric" aria-label={`${label}数值`} min="0" max="255" step="1" value={value}
+        onChange={e => { if (e.target.value !== '') onChange(Math.max(0, Math.min(255, Math.round(Number(e.target.value))))); }} /></div>
+    <input id={id} type="range" min="0" max="255" step="1" value={value} onChange={e => onChange(Number(e.target.value))} />
+  </div>;
 }
 
 // Double-tap opens the complete floating panel; its visibility controls motion.
@@ -138,12 +143,12 @@ function TestShell({ title, tone, onExit, children, controls, help }) {
     {visible && <aside className="panel" data-controls="true" ref={panelRef} aria-label={`${title}控制台`}
       style={panelPosition ? { left: panelPosition.x, top: panelPosition.y, right: 'auto' } : undefined}>
       <header className="panel-header">
-        <button className="icon-button" onClick={onExit} aria-label="返回菜单"><Icon name="back" /></button>
         <button className="panel-drag" aria-label={`拖动${title}面板`} title="拖动面板，或用方向键移动"
           onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={() => { dragRef.current = null; }}
           onPointerCancel={() => { dragRef.current = null; }} onLostPointerCapture={() => { dragRef.current = null; }} onKeyDown={moveByKey}>
-          <span>{title}</span><Icon name="move" />
+          <Icon name="settings" /><span>{title}</span>
         </button>
+        <button className="icon-button" onClick={onExit} aria-label="返回菜单"><Icon name="back" /></button>
         <button className="icon-button" aria-label="收起面板" onClick={() => { setVisible(false); document.activeElement?.blur(); }}><Icon name="close" /></button>
       </header>
       <div className="panel-content">{controls}
@@ -223,12 +228,12 @@ function SmearTest({ onExit }) {
   const [state, setState] = useState({ speed: 480, mode: 'text', reverse: false, bg: 0, fg: 25, fontSize: 40 });
   const update = patch => setState(s => ({ ...s, ...patch }));
   return <TestShell tone="smear" title="拖影测试" onExit={onExit} help={<p>竖屏上下滚动，横屏左右滚动。速度单位为 CSS 像素 / 秒。此页面用于目视观察，不直接测量响应时间或刷新率。</p>} controls={<>
-    <fieldset><legend>速度 · px/s</legend><div className="choices two">{[240, 480, 960, 1920].map(speed => <Choice key={speed} active={speed === state.speed} onClick={() => update({ speed })}>{speed} px/s</Choice>)}</div></fieldset>
+    <fieldset><legend>滚动速度 · px/s</legend><div className="choices two">{[[240, '慢速'], [480, '中速'], [960, '高速'], [1920, '极速']].map(([speed, label]) => <Choice key={speed} active={speed === state.speed} onClick={() => update({ speed })}>{label} ({speed})</Choice>)}</div></fieldset>
     <fieldset><legend>滚动方向</legend><div className="choices two"><Choice active={!state.reverse} onClick={() => update({ reverse: false })}><span className="icon-label"><Icon name={vertical ? 'down' : 'right'} />{vertical ? '向下' : '向右'}</span></Choice><Choice active={state.reverse} onClick={() => update({ reverse: true })}><span className="icon-label"><Icon name={vertical ? 'up' : 'back'} />{vertical ? '向上' : '向左'}</span></Choice></div></fieldset>
-    <fieldset><legend>内容</legend><div className="choices two"><Choice active={state.mode === 'text'} onClick={() => update({ mode: 'text' })}>文字</Choice><Choice active={state.mode === 'block'} onClick={() => update({ mode: 'block' })}>纯色方块</Choice></div></fieldset>
+    <fieldset><legend>内容</legend><div className="choices two"><Choice active={state.mode === 'text'} onClick={() => update({ mode: 'text' })}><span className="icon-label"><Icon name="text" />文字</span></Choice><Choice active={state.mode === 'block'} onClick={() => update({ mode: 'block' })}><span className="icon-label"><Icon name="block" />纯色方块</span></Choice></div></fieldset>
     {state.mode === 'text' && <label className="select-label">字号<select value={state.fontSize} onChange={e => update({ fontSize: Number(e.target.value) })}>{[24, 40, 64].map(v => <option key={v} value={v}>{v} CSS px</option>)}</select></label>}
-    <fieldset><legend>灰阶预设 · 背景 / 前景</legend><div className="choices">{PRESETS.map(([label, bg, fg]) => <Choice key={label} active={state.bg === bg && state.fg === fg} onClick={() => update({ bg, fg })}>{label}</Choice>)}</div></fieldset>
-    <Level label="背景灰阶" value={state.bg} onChange={bg => update({ bg })} /><Level label="前景灰阶" value={state.fg} onChange={fg => update({ fg })} />
+    <fieldset><legend>灰阶预设 · 背景 / 前景</legend><div className="choices preset-choices">{PRESETS.map(([label, bg, fg]) => <Choice key={label} active={state.bg === bg && state.fg === fg} onClick={() => update({ bg, fg })}><span>{label} <span className="preset-values">(G{bg}/G{fg})</span></span><span className="swatches" aria-hidden="true"><i style={{ background: gray(bg) }} /><i style={{ background: gray(fg) }} /></span></Choice>)}</div></fieldset>
+    <section className="manual-levels" aria-label="手动微调"><p className="section-label">手动微调 · 0–255</p><Level label="背景灰阶" value={state.bg} onChange={bg => update({ bg })} /><Level label="前景灰阶" value={state.fg} onChange={fg => update({ fg })} /></section>
     {state.bg === state.fg && <p className="hint">前景与背景相同，当前没有可见边缘。</p>}
 
   </>}>{panelOpen => <SmearRunner state={{ ...state, vertical, isPlaying: !panelOpen }} />}</TestShell>;
@@ -243,7 +248,7 @@ function PatternTest({ onExit }) {
   };
   return <TestShell tone="pattern" title="色阶与纯色" onExit={onExit} help={<p>近黑分档从上到下：G0、1、2、3、4、6、8、12、16、24、32、48。隐藏面板后观察。</p>} controls={<>
     <fieldset><legend>图案</legend><div className="choices two">{PATTERNS.map(([id, title]) => <Choice key={id} active={pattern === id} onClick={() => setPattern(id)}><span>{title}</span></Choice>)}</div></fieldset>
-    {pattern === 'solid' && <fieldset><legend>纯色</legend><div className="choices three">{SOLIDS.map(([name, value]) => <Choice key={name} active={solid === value} onClick={() => setSolid(value)}>{name}</Choice>)}</div><label className="select-label">自定义颜色<input aria-label="自定义颜色" type="color" value={solid} onChange={e => setSolid(e.target.value)} /></label></fieldset>}
+    {pattern === 'solid' && <fieldset><legend>纯色</legend><div className="choices three">{SOLIDS.map(([name, value]) => <Choice key={name} active={solid === value} onClick={() => setSolid(value)}><span className="solid-label"><i className="color-dot" style={{ background: value }} aria-hidden="true" />{name}</span></Choice>)}</div><label className="select-label">自定义颜色<input aria-label="自定义颜色" type="color" value={solid} onChange={e => setSolid(e.target.value)} /></label></fieldset>}
   </>}>
     <div className="test-surface pattern-surface" data-pattern={pattern} style={{ background: backgrounds[pattern] || '#000' }}>
       {pattern === 'steps' && <div className="gray-steps">{[0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48].map(value => <div key={value} style={{ background: gray(value) }} />)}</div>}
@@ -275,7 +280,7 @@ function APLTest({ onExit }) {
   const signalMean = (area / 100 * box + (1 - area / 100) * background) / 255 * 100;
   return <TestShell tone="apl" title="APL 窗口" onExit={onExit} help={<><p>面积以当前网页区域为分母。测量前收起面板，避免面板自身发光影响读数。</p><p>平均信号电平按 8 位码值与面积加权，不是实测亮度或线性光 APL。</p></>} controls={<>
     <fieldset><legend>窗口面积比例</legend><div className="choices area-choices">{AREAS.map(value => <Choice key={value} active={value === area} onClick={() => setArea(value)}>{value}%</Choice>)}</div></fieldset>
-    <Level label="窗口灰阶" value={box} onChange={setBox} /><Level label="底色灰阶" value={background} onChange={setBackground} />
+    <section className="manual-levels" aria-label="灰阶调整"><Level label="窗口灰阶" value={box} onChange={setBox} /><Level label="底色灰阶" value={background} onChange={setBackground} /></section>
     <div className="metric"><span>平均信号电平</span><output>{signalMean.toFixed(2)}%</output></div>
   </>}><div className="test-surface apl-surface" ref={surface} style={{ background: gray(background) }}><div className="apl-window" style={{ ...dimensions, background: gray(box) }} /></div></TestShell>;
 }
