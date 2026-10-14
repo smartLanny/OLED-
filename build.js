@@ -28,7 +28,6 @@ async function build() {
   const cssResult = await postcss([
     tailwindcss({
       ...tailwindConfig,
-      config: path.join(ROOT, 'tailwind.config.js'),
       content: [JSX_FILE, path.join(ROOT, 'index.html')],
     }),
     autoprefixer,

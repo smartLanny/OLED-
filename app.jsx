@@ -13,6 +13,30 @@ const PATTERNS = [
 ];
 const SOLIDS = [['黑', '#000000'], ['白', '#ffffff'], ['红', '#ff0000'], ['绿', '#00ff00'], ['蓝', '#0000ff'], ['灰', '#808080']];
 
+// All UI icons share one local 24 px grid; no icon font or network asset.
+function Icon({ name, className = '' }) {
+  const shapes = {
+    motion: <><path d="M3 8h4M2 12h5M3 16h4" opacity=".5" /><rect x="10" y="6" width="10" height="12" rx="2" /><path d="M14 9v6" opacity=".45" /></>,
+    gradation: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 7v10" opacity=".25" /><path d="M12 7v10" opacity=".55" /><path d="M17 7v10" /></>,
+    window: <><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" /><rect x="8" y="8" width="8" height="8" rx="1" fill="currentColor" stroke="none" /></>,
+    back: <path d="m14 6-6 6 6 6M8 12h13" />,
+    down: <path d="M12 3v17m-6-6 6 6 6-6" />,
+    next: <path d="m9 5 7 7-7 7" />,
+    play: <path d="m8 5 11 7-11 7Z" fill="currentColor" stroke="none" />,
+    pause: <><path d="M8 5v14M16 5v14" strokeWidth="3" /></>,
+    hide: <><path d="m3 3 18 18M10.6 5.1 12 5c6 0 10 7 10 7a17 17 0 0 1-3 3.6M6.2 6.2A22 22 0 0 0 2 12s4 7 10 7c1.8 0 3.4-.6 4.8-1.4M9.9 9.9a3 3 0 0 0 4.2 4.2" /></>,
+    expand: <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />,
+    collapse: <path d="M3 8h5V3m8 0v5h5M8 21v-5H3m18 0h-5v5" />,
+    info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6m0-10v.1" /></>,
+  };
+  return <svg className={`ui-icon ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{shapes[name]}</svg>;
+}
+const MENU_TESTS = [
+  { id: 'smear', icon: 'motion', tone: 'violet', category: '动态响应', title: '拖影测试', description: <>低灰文字与方块<br />比较不同速度下的拖影</> },
+  { id: 'pattern', icon: 'gradation', tone: 'green', category: '色阶检查', title: '色阶与纯色', description: <>近黑层次与颜色过渡<br />检查坏点、色斑与均匀性</> },
+  { id: 'apl', icon: 'window', tone: 'amber', category: '亮度窗口', title: 'APL 窗口', description: <>1–100% 面积窗口<br />观察画面面积对亮度的影响</> },
+];
+
 function Choice({ active, children, ...props }) {
   return <button type="button" aria-pressed={active} className={active ? 'choice selected' : 'choice'} {...props}>{children}</button>;
 }
@@ -72,10 +96,10 @@ function TestShell({ title, onExit, children, controls, onSpace, footer }) {
   return <main className="test-shell" onMouseDownCapture={e => { if (suppressClick.current) e.preventDefault(); }} onClickCapture={e => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation(); suppressClick.current = false; } }} onPointerDown={pointerDown} onPointerUp={pointerUp} onPointerCancel={() => { pointerStart.current = null; lastTap.current = null; }}>
     {children}
     {visible && <aside className="panel" data-controls="true" aria-label={`${title}控制台`}>
-      <header className="panel-header"><button className="icon-button" onClick={onExit} aria-label="返回菜单">←</button><h1>{title}</h1>
-        <button className="quiet-button" onClick={() => { setVisible(false); document.activeElement?.blur(); }}>隐藏控制</button></header>
+      <header className="panel-header"><button className="icon-button" onClick={onExit} aria-label="返回菜单"><Icon name="back" /></button><h1>{title}</h1>
+        <button className="quiet-button" onClick={() => { setVisible(false); document.activeElement?.blur(); }}><Icon name="hide" />隐藏控制</button></header>
       <div className="panel-content">{controls}
-        <div className="test-tools"><button onClick={toggleFullscreen}>{fullscreen ? '退出全屏' : '进入全屏'}</button></div>
+        <div className="test-tools"><button onClick={toggleFullscreen}><Icon name={fullscreen ? 'collapse' : 'expand'} />{fullscreen ? '退出全屏' : '进入全屏'}</button></div>
         {notice && <p role="status" className="hint">{notice}</p>}
         <p className="hint">双击空白画面或按 H 隐藏 / 恢复控制。{footer}按 Esc 返回菜单。</p>
       </div>
@@ -143,9 +167,9 @@ function SmearTest({ onExit }) {
   const update = patch => setState(s => ({ ...s, ...patch }));
   const pause = () => setState(s => ({ ...s, isPlaying: !s.isPlaying }));
   return <TestShell title="拖影测试" onExit={onExit} onSpace={pause} footer="空格暂停 / 播放。" controls={<>
-    <button className="primary full-width" onClick={pause}>{state.isPlaying ? '暂停滚动' : '开始滚动'}</button>
+    <button className="primary full-width" onClick={pause}><Icon name={state.isPlaying ? 'pause' : 'play'} />{state.isPlaying ? '暂停滚动' : '开始滚动'}</button>
     <fieldset><legend>滚动速度 · CSS 像素 / 秒</legend><div className="choices two">{[240, 480, 960, 1920].map(speed => <Choice key={speed} active={speed === state.speed} onClick={() => update({ speed })}>{speed} px/s</Choice>)}</div></fieldset>
-    <fieldset><legend>方向</legend><div className="choices two"><Choice active={state.direction === 'horizontal'} onClick={() => update({ direction: 'horizontal' })}>← 向左</Choice><Choice active={state.direction === 'vertical'} onClick={() => update({ direction: 'vertical' })}>↓ 向下</Choice></div></fieldset>
+    <fieldset><legend>方向</legend><div className="choices two"><Choice active={state.direction === 'horizontal'} onClick={() => update({ direction: 'horizontal' })}><span className="icon-label"><Icon name="back" />向左</span></Choice><Choice active={state.direction === 'vertical'} onClick={() => update({ direction: 'vertical' })}><span className="icon-label"><Icon name="down" />向下</span></Choice></div></fieldset>
     <fieldset><legend>内容</legend><div className="choices two"><Choice active={state.mode === 'text'} onClick={() => update({ mode: 'text' })}>文字</Choice><Choice active={state.mode === 'block'} onClick={() => update({ mode: 'block' })}>纯色方块</Choice></div></fieldset>
     {state.mode === 'text' && <label className="select-label">字号<select value={state.fontSize} onChange={e => update({ fontSize: Number(e.target.value) })}>{[24, 40, 64].map(v => <option key={v} value={v}>{v} CSS px</option>)}</select></label>}
     <fieldset><legend>灰阶预设 · 背景 / 前景</legend><div className="choices">{PRESETS.map(([label, bg, fg]) => <Choice key={label} active={state.bg === bg && state.fg === fg} onClick={() => update({ bg, fg })}>{label}</Choice>)}</div></fieldset>
@@ -240,15 +264,24 @@ function App() {
   }, []);
   return <div className="app">
     {view === 'menu' && <main className="menu"><div className="menu-inner">
-      <div className="eyebrow">手机屏幕 · 目视测试 <span>局域网 · 离线可用</span></div>
-      <h1>装机宅OLED测试</h1><p className="intro">拖影、暗部层次与窗口亮度。打开测试，隐藏控制，专注观察。</p>
+      <div className="eyebrow"><span>手机屏幕 · 目视测试</span><span className="offline-badge"><i />离线可用</span></div>
+      <h1>装机宅OLED测试</h1>
+      <p className="intro">从拖影到暗部层次，选一项开始观察。</p>
+      <div className="section-label"><span>屏幕测试</span><span>3 项工具</span></div>
       <div className="test-cards">
-        <button className="test-card violet" onClick={() => setView('smear')}><span className="card-number">01 / 动态响应</span><h2>拖影测试 <span>↗</span></h2><p>低灰文字与纯色方块<br />调整速度、方向与灰阶</p><span className="card-preview motion-preview"><i /><i /><i /></span></button>
-        <button className="test-card green" onClick={() => setView('pattern')}><span className="card-number">02 / 色阶检查</span><h2>色阶与纯色 <span>↗</span></h2><p>近黑层次、六色渐变<br />检查坏点与显示均匀性</p><span className="card-preview gradient-preview" /></button>
-        <button className="test-card amber" onClick={() => setView('apl')}><span className="card-number">03 / 亮度窗口</span><h2>APL 窗口 <span>↗</span></h2><p>1–100% 面积窗口<br />观察不同面积下的亮度变化</p><span className="card-preview window-preview"><i /></span></button>
+        {MENU_TESTS.map((test, index) => <button key={test.id} className={`test-card ${test.tone}`} onClick={() => setView(test.id)}>
+          <span className="card-icon"><Icon name={test.icon} /></span>
+          <span className="card-copy"><span className="card-category">{test.category}<span className="card-number">0{index + 1}</span></span>
+            <span className="card-title">{test.title}</span><span className="card-description">{test.description}</span></span>
+          <span className="card-enter"><Icon name="next" /></span>
+        </button>)}
       </div>
-      <div className="instructions"><strong>开始前</strong><p>固定系统亮度，关闭自动亮度、护眼与色温自适应。对比手机时使用相同设置和环境。</p><p>双击测试画面或按 H 隐藏 / 恢复控制，Esc 返回。局域网 HTTP 下若不能保持常亮，请在手机上延长自动锁屏时间。</p></div>
-      {fullscreen && <button className="quiet-button" onClick={() => document.exitFullscreen().catch(() => {})}>退出全屏</button>}
+      <div className="instructions"><div className="instructions-heading"><Icon name="info" /><strong>测试前准备</strong></div>
+        <p>固定系统亮度，关闭自动亮度、护眼与自适应色温。对比设备时保持环境与设置一致。</p>
+        <div className="gesture-note"><span className="gesture-symbol" aria-hidden="true"><i /><i /></span><span>双击画面，隐藏 / 恢复控制</span></div>
+        <details><summary>全屏、常亮与键盘操作</summary><p>进入测试后可选择全屏。局域网 HTTP 若不能保持常亮，请延长手机自动锁屏时间。键盘 H 隐藏 / 恢复控制，Esc 返回菜单。</p></details>
+      </div>
+      {fullscreen && <button className="quiet-button" onClick={() => document.exitFullscreen().catch(() => {})}><Icon name="collapse" />退出全屏</button>}
       <footer>浏览器目视测试工具 · 不直接测量亮度、频闪或响应时间</footer>
     </div></main>}
     {view === 'smear' && <SmearTest onExit={exit} />}
