@@ -31,12 +31,15 @@ function request(base, pathname, { method = 'GET' } = {}) {
 test('static server exposes only runtime assets and handles HTTP paths safely', async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oled-server-test-'));
   await fs.mkdir(path.join(root, 'vendor'));
+  await fs.mkdir(path.join(root, 'assets'));
   await fs.mkdir(path.join(root, 'node_modules'));
   await fs.writeFile(path.join(root, 'index.html'), '<main>OLED</main>');
   await fs.writeFile(path.join(root, 'app.js'), 'window.app = true;');
   await fs.writeFile(path.join(root, 'app.css'), 'body { color: white; }');
   await fs.writeFile(path.join(root, 'vendor/react.js'), 'window.React = {};');
   await fs.writeFile(path.join(root, 'vendor/react-dom.js'), 'window.ReactDOM = {};');
+  await fs.writeFile(path.join(root, 'vendor/LICENSE-react.txt'), 'React license');
+  await fs.writeFile(path.join(root, 'assets/test-icons.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
   await fs.writeFile(path.join(root, 'app.jsx'), 'private source');
   await fs.writeFile(path.join(root, 'src.css'), 'private source');
   await fs.writeFile(path.join(root, 'server.js'), 'private source');
@@ -61,11 +64,25 @@ test('static server exposes only runtime assets and handles HTTP paths safely', 
     assert.equal(index.body, '<main>OLED</main>');
     assert.match(index.headers['content-type'], /^text\/html/);
 
-    for (const asset of ['/app.js', '/app.css', '/vendor/react.js', '/vendor/react-dom.js']) {
+    for (const asset of [
+      '/app.js',
+      '/app.css',
+      '/vendor/react.js',
+      '/vendor/react-dom.js',
+      '/vendor/LICENSE-react.txt',
+    ]) {
       const response = await request(base, asset);
       assert.equal(response.status, 200, asset);
       assert.ok(response.body.length > 0, asset);
     }
+
+    const icon = await request(base, '/assets/test-icons.png');
+    assert.equal(icon.status, 200);
+    assert.equal(icon.headers['content-type'], 'image/png');
+    assert.equal(Number(icon.headers['content-length']), 4);
+
+    const license = await request(base, '/vendor/LICENSE-react.txt');
+    assert.equal(license.headers['content-type'], 'text/plain; charset=utf-8');
   });
 
   await t.test('supports HEAD with the same metadata and no response body', async () => {
@@ -80,7 +97,15 @@ test('static server exposes only runtime assets and handles HTTP paths safely', 
     assert.equal(method.status, 405);
     assert.equal(method.headers.allow, 'GET, HEAD');
 
-    for (const file of ['/app.jsx', '/src.css', '/server.js', '/backup.txt', '/node_modules/secret.js', '/vendor/tailwind.js']) {
+    for (const file of [
+      '/app.jsx',
+      '/src.css',
+      '/server.js',
+      '/backup.txt',
+      '/node_modules/secret.js',
+      '/vendor/tailwind.js',
+      '/assets/other.png',
+    ]) {
       assert.equal((await request(base, file)).status, 404, file);
     }
   });

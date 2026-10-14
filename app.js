@@ -11,52 +11,10 @@ const AREAS = [1, 2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
 const TEXTS = ['The quick brown fox jumps over the lazy dog. 0123456789', '天地玄黄 宇宙洪荒 日月盈昃 辰宿列张', 'OLED BLACK SMEAR / 灰阶响应观察'];
 const PATTERNS = [['gradient', '全灰阶渐变', 'G0 → G255'], ['dark', '近黑渐变', 'G0 → G64'], ['expanded', '暗部展开渐变', '非线性分布'], ['steps', '近黑分档', 'G0 · 1 · 2 · 3 · 4 · 6 · 8 · 12 · 16 · 24 · 32 · 48'], ['spectrum', '六色渐变', 'RGBCMY → 黑'], ['solid', '纯色检查', '坏点 / 色斑 / 均匀性']];
 const SOLIDS = [['黑', '#000000'], ['白', '#ffffff'], ['红', '#ff0000'], ['绿', '#00ff00'], ['蓝', '#0000ff'], ['灰', '#808080']];
-
-// All UI icons share one local 24 px grid; no icon font or network asset.
 function Icon({
-  name,
-  className = ''
+  name
 }) {
   const shapes = {
-    motion: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
-      d: "M3 8h4M2 12h5M3 16h4",
-      opacity: ".5"
-    }), /*#__PURE__*/React.createElement("rect", {
-      x: "10",
-      y: "6",
-      width: "10",
-      height: "12",
-      rx: "2"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M14 9v6",
-      opacity: ".45"
-    })),
-    gradation: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
-      x: "3",
-      y: "5",
-      width: "18",
-      height: "14",
-      rx: "2"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M7 7v10",
-      opacity: ".25"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M12 7v10",
-      opacity: ".55"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M17 7v10"
-    })),
-    window: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
-      d: "M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"
-    }), /*#__PURE__*/React.createElement("rect", {
-      x: "8",
-      y: "8",
-      width: "8",
-      height: "8",
-      rx: "1",
-      fill: "currentColor",
-      stroke: "none"
-    })),
     back: /*#__PURE__*/React.createElement("path", {
       d: "m14 6-6 6 6 6M8 12h13"
     }),
@@ -66,34 +24,22 @@ function Icon({
     next: /*#__PURE__*/React.createElement("path", {
       d: "m9 5 7 7-7 7"
     }),
-    play: /*#__PURE__*/React.createElement("path", {
-      d: "m8 5 11 7-11 7Z",
-      fill: "currentColor",
-      stroke: "none"
+    close: /*#__PURE__*/React.createElement("path", {
+      d: "m6 6 12 12M6 18 18 6"
     }),
-    pause: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
-      d: "M8 5v14M16 5v14",
+    move: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M8 8h.01M16 8h.01M8 16h.01M16 16h.01",
       strokeWidth: "3"
-    })),
-    hide: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
-      d: "m3 3 18 18M10.6 5.1 12 5c6 0 10 7 10 7a17 17 0 0 1-3 3.6M6.2 6.2A22 22 0 0 0 2 12s4 7 10 7c1.8 0 3.4-.6 4.8-1.4M9.9 9.9a3 3 0 0 0 4.2 4.2"
     })),
     expand: /*#__PURE__*/React.createElement("path", {
       d: "M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"
     }),
     collapse: /*#__PURE__*/React.createElement("path", {
       d: "M3 8h5V3m8 0v5h5M8 21v-5H3m18 0h-5v5"
-    }),
-    info: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
-      cx: "12",
-      cy: "12",
-      r: "9"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M12 11v6m0-10v.1"
-    }))
+    })
   };
   return /*#__PURE__*/React.createElement("svg", {
-    className: `ui-icon ${className}`,
+    className: "ui-icon",
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
@@ -106,25 +52,16 @@ function Icon({
 }
 const MENU_TESTS = [{
   id: 'smear',
-  icon: 'motion',
-  tone: 'violet',
-  category: '动态响应',
   title: '拖影测试',
-  description: /*#__PURE__*/React.createElement(React.Fragment, null, "\u4F4E\u7070\u6587\u5B57\u4E0E\u65B9\u5757", /*#__PURE__*/React.createElement("br", null), "\u6BD4\u8F83\u4E0D\u540C\u901F\u5EA6\u4E0B\u7684\u62D6\u5F71")
+  position: '0%'
 }, {
   id: 'pattern',
-  icon: 'gradation',
-  tone: 'green',
-  category: '色阶检查',
   title: '色阶与纯色',
-  description: /*#__PURE__*/React.createElement(React.Fragment, null, "\u8FD1\u9ED1\u5C42\u6B21\u4E0E\u989C\u8272\u8FC7\u6E21", /*#__PURE__*/React.createElement("br", null), "\u68C0\u67E5\u574F\u70B9\u3001\u8272\u6591\u4E0E\u5747\u5300\u6027")
+  position: '50%'
 }, {
   id: 'apl',
-  icon: 'window',
-  tone: 'amber',
-  category: '亮度窗口',
   title: 'APL 窗口',
-  description: /*#__PURE__*/React.createElement(React.Fragment, null, "1\u2013100% \u9762\u79EF\u7A97\u53E3", /*#__PURE__*/React.createElement("br", null), "\u89C2\u5BDF\u753B\u9762\u9762\u79EF\u5BF9\u4EAE\u5EA6\u7684\u5F71\u54CD")
+  position: '100%'
 }];
 function Choice({
   active,
@@ -170,31 +107,53 @@ function Level({
   })));
 }
 
-// A test surface stays entirely clean when controls are hidden. Restore with two taps or H.
+// Double-tap opens the complete floating panel; its visibility controls motion.
 function TestShell({
   title,
   onExit,
   children,
   controls,
-  onSpace,
-  footer
+  help
 }) {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement));
   const [notice, setNotice] = useState('');
+  const [panelPosition, setPanelPosition] = useState(null);
+  const shellRef = useRef(null);
+  const panelRef = useRef(null);
+  const dragRef = useRef(null);
   const lastTap = useRef(null);
   const pointerStart = useRef(null);
   const suppressClick = useRef(false);
+  const clampPosition = position => {
+    const shell = shellRef.current,
+      panel = panelRef.current;
+    return {
+      x: Math.max(12, Math.min(position.x, shell.clientWidth - panel.offsetWidth - 12)),
+      y: Math.max(12, Math.min(position.y, shell.clientHeight - panel.offsetHeight - 12))
+    };
+  };
+  useLayoutEffect(() => {
+    if (!visible) return;
+    const fit = () => setPanelPosition(previous => {
+      const next = clampPosition(previous || {
+        x: shellRef.current.clientWidth,
+        y: 16
+      });
+      return previous?.x === next.x && previous?.y === next.y ? previous : next;
+    });
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(shellRef.current);
+    observer.observe(panelRef.current);
+    return () => observer.disconnect();
+  }, [visible]);
   useEffect(() => {
     const key = e => {
       if (e.target.closest('input, select, textarea') || e.repeat) return;
       if (e.code === 'KeyH') {
         setVisible(v => !v);
         document.activeElement?.blur();
-      }
-      if (e.code === 'Space' && onSpace && !e.target.closest('button')) {
-        e.preventDefault();
-        onSpace();
       }
     };
     const changed = () => setFullscreen(Boolean(document.fullscreenElement));
@@ -204,16 +163,16 @@ function TestShell({
       window.removeEventListener('keydown', key);
       document.removeEventListener('fullscreenchange', changed);
     };
-  }, [onSpace]);
+  }, []);
   const toggleFullscreen = async () => {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();else {
-        setNotice('此浏览器不支持网页全屏，可添加到主屏幕后打开。');
+        setNotice('浏览器不支持全屏，可添加到主屏幕后打开。');
         return;
       }
       setNotice('');
     } catch {
-      setNotice('未能进入全屏，请检查浏览器权限；仍可继续测试。');
+      setNotice('暂时无法全屏，可继续测试。');
     }
   };
   const pointerDown = e => {
@@ -241,7 +200,7 @@ function TestShell({
     }
     const previous = lastTap.current;
     if (previous && now - previous.time < 350 && Math.hypot(e.clientX - previous.x, e.clientY - previous.y) < 30) {
-      // The synthesized touch click may hit a newly restored control. Consume it.
+      // A compatibility mouse event must not focus or activate a newly shown control.
       suppressClick.current = true;
       setVisible(v => !v);
       lastTap.current = null;
@@ -251,8 +210,43 @@ function TestShell({
       time: now
     };
   };
+  const startDrag = e => {
+    if (!e.isPrimary || e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      left: panelRef.current.offsetLeft,
+      top: panelRef.current.offsetTop
+    };
+  };
+  const moveDrag = e => {
+    const drag = dragRef.current;
+    if (!drag || drag.id !== e.pointerId) return;
+    setPanelPosition(clampPosition({
+      x: drag.left + e.clientX - drag.x,
+      y: drag.top + e.clientY - drag.y
+    }));
+  };
+  const moveByKey = e => {
+    const offsets = {
+      ArrowLeft: [-20, 0],
+      ArrowRight: [20, 0],
+      ArrowUp: [0, -20],
+      ArrowDown: [0, 20]
+    };
+    if (!offsets[e.key]) return;
+    e.preventDefault();
+    const [dx, dy] = offsets[e.key];
+    setPanelPosition(clampPosition({
+      x: panelRef.current.offsetLeft + dx,
+      y: panelRef.current.offsetTop + dy
+    }));
+  };
   return /*#__PURE__*/React.createElement("main", {
     className: "test-shell",
+    ref: shellRef,
     onMouseDownCapture: e => {
       if (suppressClick.current) e.preventDefault();
     },
@@ -269,10 +263,16 @@ function TestShell({
       pointerStart.current = null;
       lastTap.current = null;
     }
-  }, children, visible && /*#__PURE__*/React.createElement("aside", {
+  }, typeof children === 'function' ? children(visible) : children, visible && /*#__PURE__*/React.createElement("aside", {
     className: "panel",
     "data-controls": "true",
-    "aria-label": `${title}控制台`
+    ref: panelRef,
+    "aria-label": `${title}控制台`,
+    style: panelPosition ? {
+      left: panelPosition.x,
+      top: panelPosition.y,
+      right: 'auto'
+    } : undefined
   }, /*#__PURE__*/React.createElement("header", {
     className: "panel-header"
   }, /*#__PURE__*/React.createElement("button", {
@@ -281,15 +281,34 @@ function TestShell({
     "aria-label": "\u8FD4\u56DE\u83DC\u5355"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "back"
-  })), /*#__PURE__*/React.createElement("h1", null, title), /*#__PURE__*/React.createElement("button", {
-    className: "quiet-button",
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "panel-drag",
+    "aria-label": `拖动${title}面板`,
+    title: "\u62D6\u52A8\u9762\u677F\uFF0C\u6216\u7528\u65B9\u5411\u952E\u79FB\u52A8",
+    onPointerDown: startDrag,
+    onPointerMove: moveDrag,
+    onPointerUp: () => {
+      dragRef.current = null;
+    },
+    onPointerCancel: () => {
+      dragRef.current = null;
+    },
+    onLostPointerCapture: () => {
+      dragRef.current = null;
+    },
+    onKeyDown: moveByKey
+  }, /*#__PURE__*/React.createElement("span", null, title), /*#__PURE__*/React.createElement(Icon, {
+    name: "move"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "icon-button",
+    "aria-label": "\u6536\u8D77\u9762\u677F",
     onClick: () => {
       setVisible(false);
       document.activeElement?.blur();
     }
   }, /*#__PURE__*/React.createElement(Icon, {
-    name: "hide"
-  }), "\u9690\u85CF\u63A7\u5236")), /*#__PURE__*/React.createElement("div", {
+    name: "close"
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "panel-content"
   }, controls, /*#__PURE__*/React.createElement("div", {
     className: "test-tools"
@@ -297,12 +316,12 @@ function TestShell({
     onClick: toggleFullscreen
   }, /*#__PURE__*/React.createElement(Icon, {
     name: fullscreen ? 'collapse' : 'expand'
-  }), fullscreen ? '退出全屏' : '进入全屏')), notice && /*#__PURE__*/React.createElement("p", {
+  }), fullscreen ? '退出全屏' : '全屏')), notice && /*#__PURE__*/React.createElement("p", {
     role: "status",
     className: "hint"
-  }, notice), /*#__PURE__*/React.createElement("p", {
-    className: "hint"
-  }, "\u53CC\u51FB\u7A7A\u767D\u753B\u9762\u6216\u6309 H \u9690\u85CF / \u6062\u590D\u63A7\u5236\u3002", footer, "\u6309 Esc \u8FD4\u56DE\u83DC\u5355\u3002"))));
+  }, notice), /*#__PURE__*/React.createElement("details", {
+    className: "help"
+  }, /*#__PURE__*/React.createElement("summary", null, "\u4F7F\u7528\u5E2E\u52A9"), /*#__PURE__*/React.createElement("p", null, "\u53CC\u51FB\u7A7A\u767D\u5904\u6253\u5F00\u6216\u6536\u8D77\u9762\u677F\uFF1B\u6253\u5F00\u65F6\u6EDA\u52A8\u81EA\u52A8\u6682\u505C\uFF0C\u6536\u8D77\u540E\u7EE7\u7EED\u3002\u62D6\u52A8\u6807\u9898\u53EF\u79FB\u52A8\u9762\u677F\u3002"), help, /*#__PURE__*/React.createElement("p", null, "\u5BF9\u6BD4\u65F6\u56FA\u5B9A\u7CFB\u7EDF\u4EAE\u5EA6\u4E0E\u8272\u6E29\u3002H \u663E\u793A\u63A7\u5236\uFF0CEsc \u8FD4\u56DE\u3002")))));
 }
 function SmearRunner({
   state
@@ -389,7 +408,6 @@ function SmearTest({
   onExit
 }) {
   const [state, setState] = useState({
-    isPlaying: true,
     speed: 480,
     mode: 'text',
     direction: 'horizontal',
@@ -401,21 +419,11 @@ function SmearTest({
     ...s,
     ...patch
   }));
-  const pause = () => setState(s => ({
-    ...s,
-    isPlaying: !s.isPlaying
-  }));
   return /*#__PURE__*/React.createElement(TestShell, {
     title: "\u62D6\u5F71\u6D4B\u8BD5",
     onExit: onExit,
-    onSpace: pause,
-    footer: "\u7A7A\u683C\u6682\u505C / \u64AD\u653E\u3002",
-    controls: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-      className: "primary full-width",
-      onClick: pause
-    }, /*#__PURE__*/React.createElement(Icon, {
-      name: state.isPlaying ? 'pause' : 'play'
-    }), state.isPlaying ? '暂停滚动' : '开始滚动'), /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u6EDA\u52A8\u901F\u5EA6 \xB7 CSS \u50CF\u7D20 / \u79D2"), /*#__PURE__*/React.createElement("div", {
+    help: /*#__PURE__*/React.createElement("p", null, "\u901F\u5EA6\u5355\u4F4D\u4E3A CSS \u50CF\u7D20 / \u79D2\u3002\u6B64\u9875\u9762\u7528\u4E8E\u76EE\u89C6\u89C2\u5BDF\uFF0C\u4E0D\u76F4\u63A5\u6D4B\u91CF\u54CD\u5E94\u65F6\u95F4\u6216\u5237\u65B0\u7387\u3002"),
+    controls: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u901F\u5EA6 \xB7 px/s"), /*#__PURE__*/React.createElement("div", {
       className: "choices two"
     }, [240, 480, 960, 1920].map(speed => /*#__PURE__*/React.createElement(Choice, {
       key: speed,
@@ -488,11 +496,12 @@ function SmearTest({
       })
     }), state.bg === state.fg && /*#__PURE__*/React.createElement("p", {
       className: "hint"
-    }, "\u524D\u666F\u4E0E\u80CC\u666F\u76F8\u540C\uFF0C\u5F53\u524D\u6CA1\u6709\u53EF\u89C1\u8FB9\u7F18\u3002"), /*#__PURE__*/React.createElement("p", {
-      className: "hint"
-    }, "\u8DDF\u968F\u6587\u5B57\u6216\u65B9\u5757\u8FB9\u7F18\u89C2\u5BDF\u3002\u901F\u5EA6\u4F7F\u7528 CSS \u50CF\u7D20\uFF0C\u53D7\u6D4F\u89C8\u5668\u5E27\u7387\u5F71\u54CD\uFF1B\u672C\u9875\u4E0D\u6D4B\u91CF\u54CD\u5E94\u65F6\u95F4\u6216\u5C4F\u5E55\u5237\u65B0\u7387\u3002"))
-  }, /*#__PURE__*/React.createElement(SmearRunner, {
-    state: state
+    }, "\u524D\u666F\u4E0E\u80CC\u666F\u76F8\u540C\uFF0C\u5F53\u524D\u6CA1\u6709\u53EF\u89C1\u8FB9\u7F18\u3002"))
+  }, panelOpen => /*#__PURE__*/React.createElement(SmearRunner, {
+    state: {
+      ...state,
+      isPlaying: !panelOpen
+    }
   }));
 }
 function PatternTest({
@@ -509,13 +518,14 @@ function PatternTest({
   return /*#__PURE__*/React.createElement(TestShell, {
     title: "\u8272\u9636\u4E0E\u7EAF\u8272",
     onExit: onExit,
-    controls: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u6D4B\u8BD5\u56FE\u6848"), /*#__PURE__*/React.createElement("div", {
-      className: "choices"
-    }, PATTERNS.map(([id, title, desc]) => /*#__PURE__*/React.createElement(Choice, {
+    help: /*#__PURE__*/React.createElement("p", null, "\u8FD1\u9ED1\u5206\u6863\u4ECE\u5DE6\u5230\u53F3\uFF1AG0\u30011\u30012\u30013\u30014\u30016\u30018\u300112\u300116\u300124\u300132\u300148\u3002\u9690\u85CF\u9762\u677F\u540E\u89C2\u5BDF\u3002"),
+    controls: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u56FE\u6848"), /*#__PURE__*/React.createElement("div", {
+      className: "choices two"
+    }, PATTERNS.map(([id, title]) => /*#__PURE__*/React.createElement(Choice, {
       key: id,
       active: pattern === id,
       onClick: () => setPattern(id)
-    }, /*#__PURE__*/React.createElement("span", null, title), /*#__PURE__*/React.createElement("small", null, desc))))), pattern === 'solid' && /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u7EAF\u8272"), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("span", null, title))))), pattern === 'solid' && /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u7EAF\u8272"), /*#__PURE__*/React.createElement("div", {
       className: "choices three"
     }, SOLIDS.map(([name, value]) => /*#__PURE__*/React.createElement(Choice, {
       key: name,
@@ -528,9 +538,7 @@ function PatternTest({
       type: "color",
       value: solid,
       onChange: e => setSolid(e.target.value)
-    }))), /*#__PURE__*/React.createElement("p", {
-      className: "hint"
-    }, "\u9690\u85CF\u63A7\u5236\u540E\u518D\u89C2\u5BDF\uFF0C\u6D4B\u8BD5\u533A\u57DF\u4E0D\u4FDD\u7559\u6587\u5B57\u3001\u9634\u5F71\u6216\u6309\u94AE\u3002\u8FD1\u9ED1\u5206\u6863\u4ECE\u5DE6\u5230\u53F3\u9012\u589E\uFF1B\u6E10\u53D8\u7528\u4E8E\u76EE\u89C6\u68C0\u67E5\uFF0C\u4E0D\u4EE3\u8868\u4EEA\u5668\u6821\u51C6\u7ED3\u679C\u3002"))
+    }))))
   }, /*#__PURE__*/React.createElement("div", {
     className: "test-surface pattern-surface",
     "data-pattern": pattern,
@@ -588,9 +596,8 @@ function APLTest({
   return /*#__PURE__*/React.createElement(TestShell, {
     title: "APL \u7A97\u53E3",
     onExit: onExit,
-    controls: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-      className: "readout"
-    }, /*#__PURE__*/React.createElement("span", null, "\u7A97\u53E3\u9762\u79EF"), /*#__PURE__*/React.createElement("strong", null, area, "%"), /*#__PURE__*/React.createElement("span", null, "\u5360\u5F53\u524D\u7F51\u9875\u6D4B\u8BD5\u533A\u57DF")), /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u7A97\u53E3\u9762\u79EF\u6BD4\u4F8B"), /*#__PURE__*/React.createElement("div", {
+    help: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", null, "\u9762\u79EF\u4EE5\u5F53\u524D\u7F51\u9875\u533A\u57DF\u4E3A\u5206\u6BCD\u3002\u6D4B\u91CF\u524D\u6536\u8D77\u9762\u677F\uFF0C\u907F\u514D\u9762\u677F\u81EA\u8EAB\u53D1\u5149\u5F71\u54CD\u8BFB\u6570\u3002"), /*#__PURE__*/React.createElement("p", null, "\u5E73\u5747\u4FE1\u53F7\u7535\u5E73\u6309 8 \u4F4D\u7801\u503C\u4E0E\u9762\u79EF\u52A0\u6743\uFF0C\u4E0D\u662F\u5B9E\u6D4B\u4EAE\u5EA6\u6216\u7EBF\u6027\u5149 APL\u3002")),
+    controls: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u7A97\u53E3\u9762\u79EF\u6BD4\u4F8B"), /*#__PURE__*/React.createElement("div", {
       className: "choices area-choices"
     }, AREAS.map(value => /*#__PURE__*/React.createElement(Choice, {
       key: value,
@@ -606,11 +613,7 @@ function APLTest({
       onChange: setBackground
     }), /*#__PURE__*/React.createElement("div", {
       className: "metric"
-    }, /*#__PURE__*/React.createElement("span", null, "\u5E73\u5747\u4FE1\u53F7\u7535\u5E73"), /*#__PURE__*/React.createElement("output", null, signalMean.toFixed(2), "%")), /*#__PURE__*/React.createElement("p", {
-      className: "hint"
-    }, "\u6309 8 \u4F4D RGB \u7801\u503C\u548C\u9762\u79EF\u52A0\u6743\u8BA1\u7B97\uFF0C\u4E0D\u662F\u5B9E\u6D4B\u4EAE\u5EA6\u6216\u7EBF\u6027\u5149 APL\u3002\u767D\u7A97\u9ED1\u5E95\u65F6\uFF0C\u8BE5\u503C\u7B49\u4E8E\u7A97\u53E3\u9762\u79EF\u6BD4\u4F8B\u3002"), /*#__PURE__*/React.createElement("p", {
-      className: "hint"
-    }, "\u8BF7\u9690\u85CF\u63A7\u5236\u540E\u6D4B\u91CF\uFF1A\u9762\u677F\u4E5F\u4F1A\u53D1\u5149\uFF0C\u6539\u53D8\u5B9E\u9645\u5E73\u5747\u753B\u9762\u4EAE\u5EA6\u3002\u6D4F\u89C8\u5668\u5DE5\u5177\u680F\u4E0D\u8BA1\u5165\u9762\u79EF\uFF1B\u5168\u5C4F\u53EF\u51CF\u5C11\u5E72\u6270\u3002"))
+    }, /*#__PURE__*/React.createElement("span", null, "\u5E73\u5747\u4FE1\u53F7\u7535\u5E73"), /*#__PURE__*/React.createElement("output", null, signalMean.toFixed(2), "%")))
   }, /*#__PURE__*/React.createElement("div", {
     className: "test-surface apl-surface",
     ref: surface,
@@ -657,20 +660,24 @@ function useWakeLock(active) {
 }
 function App() {
   const [view, setView] = useState('menu');
-  const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement));
-  const exit = () => setView('menu');
+  const exit = () => {
+    setView('menu');
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  };
+  const enter = id => {
+    setView(id);
+    // Fullscreen must be requested during this user gesture. Unsupported browsers stay usable.
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  };
   useWakeLock(view !== 'menu');
   useEffect(() => {
     const key = e => {
-      if (e.code === 'Escape') setView('menu');
+      if (e.code === 'Escape') exit();
     };
-    const changed = () => setFullscreen(Boolean(document.fullscreenElement));
     window.addEventListener('keydown', key);
-    document.addEventListener('fullscreenchange', changed);
-    return () => {
-      window.removeEventListener('keydown', key);
-      document.removeEventListener('fullscreenchange', changed);
-    };
+    return () => window.removeEventListener('keydown', key);
   }, []);
   return /*#__PURE__*/React.createElement("div", {
     className: "app"
@@ -678,55 +685,25 @@ function App() {
     className: "menu"
   }, /*#__PURE__*/React.createElement("div", {
     className: "menu-inner"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "eyebrow"
-  }, /*#__PURE__*/React.createElement("span", null, "\u624B\u673A\u5C4F\u5E55 \xB7 \u76EE\u89C6\u6D4B\u8BD5"), /*#__PURE__*/React.createElement("span", {
-    className: "offline-badge"
-  }, /*#__PURE__*/React.createElement("i", null), "\u79BB\u7EBF\u53EF\u7528")), /*#__PURE__*/React.createElement("h1", null, "\u88C5\u673A\u5B85OLED\u6D4B\u8BD5"), /*#__PURE__*/React.createElement("p", {
-    className: "intro"
-  }, "\u4ECE\u62D6\u5F71\u5230\u6697\u90E8\u5C42\u6B21\uFF0C\u9009\u4E00\u9879\u5F00\u59CB\u89C2\u5BDF\u3002"), /*#__PURE__*/React.createElement("div", {
-    className: "section-label"
-  }, /*#__PURE__*/React.createElement("span", null, "\u5C4F\u5E55\u6D4B\u8BD5"), /*#__PURE__*/React.createElement("span", null, "3 \u9879\u5DE5\u5177")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("h1", null, "\u88C5\u673A\u5B85OLED\u6D4B\u8BD5"), /*#__PURE__*/React.createElement("div", {
     className: "test-cards"
-  }, MENU_TESTS.map((test, index) => /*#__PURE__*/React.createElement("button", {
+  }, MENU_TESTS.map(test => /*#__PURE__*/React.createElement("button", {
     key: test.id,
-    className: `test-card ${test.tone}`,
-    onClick: () => setView(test.id)
+    className: "test-card",
+    onClick: () => enter(test.id)
   }, /*#__PURE__*/React.createElement("span", {
-    className: "card-icon"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: test.icon
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "card-copy"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "card-category"
-  }, test.category, /*#__PURE__*/React.createElement("span", {
-    className: "card-number"
-  }, "0", index + 1)), /*#__PURE__*/React.createElement("span", {
+    className: "test-art",
+    "aria-hidden": "true",
+    style: {
+      backgroundPosition: `${test.position} center`
+    }
+  }), /*#__PURE__*/React.createElement("span", {
     className: "card-title"
-  }, test.title), /*#__PURE__*/React.createElement("span", {
-    className: "card-description"
-  }, test.description)), /*#__PURE__*/React.createElement("span", {
-    className: "card-enter"
-  }, /*#__PURE__*/React.createElement(Icon, {
+  }, test.title), /*#__PURE__*/React.createElement(Icon, {
     name: "next"
-  }))))), /*#__PURE__*/React.createElement("div", {
-    className: "instructions"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "instructions-heading"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "info"
-  }), /*#__PURE__*/React.createElement("strong", null, "\u6D4B\u8BD5\u524D\u51C6\u5907")), /*#__PURE__*/React.createElement("p", null, "\u56FA\u5B9A\u7CFB\u7EDF\u4EAE\u5EA6\uFF0C\u5173\u95ED\u81EA\u52A8\u4EAE\u5EA6\u3001\u62A4\u773C\u4E0E\u81EA\u9002\u5E94\u8272\u6E29\u3002\u5BF9\u6BD4\u8BBE\u5907\u65F6\u4FDD\u6301\u73AF\u5883\u4E0E\u8BBE\u7F6E\u4E00\u81F4\u3002"), /*#__PURE__*/React.createElement("div", {
-    className: "gesture-note"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "gesture-symbol",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null)), /*#__PURE__*/React.createElement("span", null, "\u53CC\u51FB\u753B\u9762\uFF0C\u9690\u85CF / \u6062\u590D\u63A7\u5236")), /*#__PURE__*/React.createElement("details", null, /*#__PURE__*/React.createElement("summary", null, "\u5168\u5C4F\u3001\u5E38\u4EAE\u4E0E\u952E\u76D8\u64CD\u4F5C"), /*#__PURE__*/React.createElement("p", null, "\u8FDB\u5165\u6D4B\u8BD5\u540E\u53EF\u9009\u62E9\u5168\u5C4F\u3002\u5C40\u57DF\u7F51 HTTP \u82E5\u4E0D\u80FD\u4FDD\u6301\u5E38\u4EAE\uFF0C\u8BF7\u5EF6\u957F\u624B\u673A\u81EA\u52A8\u9501\u5C4F\u65F6\u95F4\u3002\u952E\u76D8 H \u9690\u85CF / \u6062\u590D\u63A7\u5236\uFF0CEsc \u8FD4\u56DE\u83DC\u5355\u3002"))), fullscreen && /*#__PURE__*/React.createElement("button", {
-    className: "quiet-button",
-    onClick: () => document.exitFullscreen().catch(() => {})
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "collapse"
-  }), "\u9000\u51FA\u5168\u5C4F"), /*#__PURE__*/React.createElement("footer", null, "\u6D4F\u89C8\u5668\u76EE\u89C6\u6D4B\u8BD5\u5DE5\u5177 \xB7 \u4E0D\u76F4\u63A5\u6D4B\u91CF\u4EAE\u5EA6\u3001\u9891\u95EA\u6216\u54CD\u5E94\u65F6\u95F4"))), view === 'smear' && /*#__PURE__*/React.createElement(SmearTest, {
+  })))), /*#__PURE__*/React.createElement("p", {
+    className: "gesture-hint"
+  }, "\u53CC\u51FB\u753B\u9762\uFF0C\u8C03\u51FA\u63A7\u5236\u9762\u677F"))), view === 'smear' && /*#__PURE__*/React.createElement(SmearTest, {
     onExit: exit
   }), view === 'pattern' && /*#__PURE__*/React.createElement(PatternTest, {
     onExit: exit

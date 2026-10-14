@@ -13,28 +13,22 @@ const PATTERNS = [
 ];
 const SOLIDS = [['黑', '#000000'], ['白', '#ffffff'], ['红', '#ff0000'], ['绿', '#00ff00'], ['蓝', '#0000ff'], ['灰', '#808080']];
 
-// All UI icons share one local 24 px grid; no icon font or network asset.
-function Icon({ name, className = '' }) {
+function Icon({ name }) {
   const shapes = {
-    motion: <><path d="M3 8h4M2 12h5M3 16h4" opacity=".5" /><rect x="10" y="6" width="10" height="12" rx="2" /><path d="M14 9v6" opacity=".45" /></>,
-    gradation: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 7v10" opacity=".25" /><path d="M12 7v10" opacity=".55" /><path d="M17 7v10" /></>,
-    window: <><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" /><rect x="8" y="8" width="8" height="8" rx="1" fill="currentColor" stroke="none" /></>,
     back: <path d="m14 6-6 6 6 6M8 12h13" />,
     down: <path d="M12 3v17m-6-6 6 6 6-6" />,
     next: <path d="m9 5 7 7-7 7" />,
-    play: <path d="m8 5 11 7-11 7Z" fill="currentColor" stroke="none" />,
-    pause: <><path d="M8 5v14M16 5v14" strokeWidth="3" /></>,
-    hide: <><path d="m3 3 18 18M10.6 5.1 12 5c6 0 10 7 10 7a17 17 0 0 1-3 3.6M6.2 6.2A22 22 0 0 0 2 12s4 7 10 7c1.8 0 3.4-.6 4.8-1.4M9.9 9.9a3 3 0 0 0 4.2 4.2" /></>,
+    close: <path d="m6 6 12 12M6 18 18 6" />,
+    move: <><path d="M8 8h.01M16 8h.01M8 16h.01M16 16h.01" strokeWidth="3" /></>,
     expand: <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />,
     collapse: <path d="M3 8h5V3m8 0v5h5M8 21v-5H3m18 0h-5v5" />,
-    info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6m0-10v.1" /></>,
   };
-  return <svg className={`ui-icon ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{shapes[name]}</svg>;
+  return <svg className="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{shapes[name]}</svg>;
 }
 const MENU_TESTS = [
-  { id: 'smear', icon: 'motion', tone: 'violet', category: '动态响应', title: '拖影测试', description: <>低灰文字与方块<br />比较不同速度下的拖影</> },
-  { id: 'pattern', icon: 'gradation', tone: 'green', category: '色阶检查', title: '色阶与纯色', description: <>近黑层次与颜色过渡<br />检查坏点、色斑与均匀性</> },
-  { id: 'apl', icon: 'window', tone: 'amber', category: '亮度窗口', title: 'APL 窗口', description: <>1–100% 面积窗口<br />观察画面面积对亮度的影响</> },
+  { id: 'smear', title: '拖影测试', position: '0%' },
+  { id: 'pattern', title: '色阶与纯色', position: '50%' },
+  { id: 'apl', title: 'APL 窗口', position: '100%' },
 ];
 
 function Choice({ active, children, ...props }) {
@@ -48,32 +42,55 @@ function Level({ label, value, onChange }) {
         onChange={e => { if (e.target.value !== '') onChange(Math.max(0, Math.min(255, Math.round(Number(e.target.value))))); }} /></div></div>;
 }
 
-// A test surface stays entirely clean when controls are hidden. Restore with two taps or H.
-function TestShell({ title, onExit, children, controls, onSpace, footer }) {
-  const [visible, setVisible] = useState(true);
+// Double-tap opens the complete floating panel; its visibility controls motion.
+function TestShell({ title, onExit, children, controls, help }) {
+  const [visible, setVisible] = useState(false);
   const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement));
   const [notice, setNotice] = useState('');
+  const [panelPosition, setPanelPosition] = useState(null);
+  const shellRef = useRef(null);
+  const panelRef = useRef(null);
+  const dragRef = useRef(null);
   const lastTap = useRef(null);
   const pointerStart = useRef(null);
   const suppressClick = useRef(false);
+
+  const clampPosition = position => {
+    const shell = shellRef.current, panel = panelRef.current;
+    return {
+      x: Math.max(12, Math.min(position.x, shell.clientWidth - panel.offsetWidth - 12)),
+      y: Math.max(12, Math.min(position.y, shell.clientHeight - panel.offsetHeight - 12)),
+    };
+  };
+  useLayoutEffect(() => {
+    if (!visible) return;
+    const fit = () => setPanelPosition(previous => {
+      const next = clampPosition(previous || { x: shellRef.current.clientWidth, y: 16 });
+      return previous?.x === next.x && previous?.y === next.y ? previous : next;
+    });
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(shellRef.current);
+    observer.observe(panelRef.current);
+    return () => observer.disconnect();
+  }, [visible]);
   useEffect(() => {
     const key = e => {
       if (e.target.closest('input, select, textarea') || e.repeat) return;
       if (e.code === 'KeyH') { setVisible(v => !v); document.activeElement?.blur(); }
-      if (e.code === 'Space' && onSpace && !e.target.closest('button')) { e.preventDefault(); onSpace(); }
     };
     const changed = () => setFullscreen(Boolean(document.fullscreenElement));
     window.addEventListener('keydown', key);
     document.addEventListener('fullscreenchange', changed);
     return () => { window.removeEventListener('keydown', key); document.removeEventListener('fullscreenchange', changed); };
-  }, [onSpace]);
+  }, []);
   const toggleFullscreen = async () => {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
       else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-      else { setNotice('此浏览器不支持网页全屏，可添加到主屏幕后打开。'); return; }
+      else { setNotice('浏览器不支持全屏，可添加到主屏幕后打开。'); return; }
       setNotice('');
-    } catch { setNotice('未能进入全屏，请检查浏览器权限；仍可继续测试。'); }
+    } catch { setNotice('暂时无法全屏，可继续测试。'); }
   };
   const pointerDown = e => {
     suppressClick.current = false;
@@ -88,20 +105,49 @@ function TestShell({ title, onExit, children, controls, onSpace, footer }) {
     if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 12 || now - start.time > 350) { lastTap.current = null; return; }
     const previous = lastTap.current;
     if (previous && now - previous.time < 350 && Math.hypot(e.clientX - previous.x, e.clientY - previous.y) < 30) {
-      // The synthesized touch click may hit a newly restored control. Consume it.
+      // A compatibility mouse event must not focus or activate a newly shown control.
       suppressClick.current = true;
       setVisible(v => !v); lastTap.current = null;
     } else lastTap.current = { x: e.clientX, y: e.clientY, time: now };
   };
-  return <main className="test-shell" onMouseDownCapture={e => { if (suppressClick.current) e.preventDefault(); }} onClickCapture={e => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation(); suppressClick.current = false; } }} onPointerDown={pointerDown} onPointerUp={pointerUp} onPointerCancel={() => { pointerStart.current = null; lastTap.current = null; }}>
-    {children}
-    {visible && <aside className="panel" data-controls="true" aria-label={`${title}控制台`}>
-      <header className="panel-header"><button className="icon-button" onClick={onExit} aria-label="返回菜单"><Icon name="back" /></button><h1>{title}</h1>
-        <button className="quiet-button" onClick={() => { setVisible(false); document.activeElement?.blur(); }}><Icon name="hide" />隐藏控制</button></header>
+  const startDrag = e => {
+    if (!e.isPrimary || e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { id: e.pointerId, x: e.clientX, y: e.clientY, left: panelRef.current.offsetLeft, top: panelRef.current.offsetTop };
+  };
+  const moveDrag = e => {
+    const drag = dragRef.current;
+    if (!drag || drag.id !== e.pointerId) return;
+    setPanelPosition(clampPosition({ x: drag.left + e.clientX - drag.x, y: drag.top + e.clientY - drag.y }));
+  };
+  const moveByKey = e => {
+    const offsets = { ArrowLeft: [-20, 0], ArrowRight: [20, 0], ArrowUp: [0, -20], ArrowDown: [0, 20] };
+    if (!offsets[e.key]) return;
+    e.preventDefault();
+    const [dx, dy] = offsets[e.key];
+    setPanelPosition(clampPosition({ x: panelRef.current.offsetLeft + dx, y: panelRef.current.offsetTop + dy }));
+  };
+  return <main className="test-shell" ref={shellRef}
+    onMouseDownCapture={e => { if (suppressClick.current) e.preventDefault(); }}
+    onClickCapture={e => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation(); suppressClick.current = false; } }}
+    onPointerDown={pointerDown} onPointerUp={pointerUp}
+    onPointerCancel={() => { pointerStart.current = null; lastTap.current = null; }}>
+    {typeof children === 'function' ? children(visible) : children}
+    {visible && <aside className="panel" data-controls="true" ref={panelRef} aria-label={`${title}控制台`}
+      style={panelPosition ? { left: panelPosition.x, top: panelPosition.y, right: 'auto' } : undefined}>
+      <header className="panel-header">
+        <button className="icon-button" onClick={onExit} aria-label="返回菜单"><Icon name="back" /></button>
+        <button className="panel-drag" aria-label={`拖动${title}面板`} title="拖动面板，或用方向键移动"
+          onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={() => { dragRef.current = null; }}
+          onPointerCancel={() => { dragRef.current = null; }} onLostPointerCapture={() => { dragRef.current = null; }} onKeyDown={moveByKey}>
+          <span>{title}</span><Icon name="move" />
+        </button>
+        <button className="icon-button" aria-label="收起面板" onClick={() => { setVisible(false); document.activeElement?.blur(); }}><Icon name="close" /></button>
+      </header>
       <div className="panel-content">{controls}
-        <div className="test-tools"><button onClick={toggleFullscreen}><Icon name={fullscreen ? 'collapse' : 'expand'} />{fullscreen ? '退出全屏' : '进入全屏'}</button></div>
+        <div className="test-tools"><button onClick={toggleFullscreen}><Icon name={fullscreen ? 'collapse' : 'expand'} />{fullscreen ? '退出全屏' : '全屏'}</button></div>
         {notice && <p role="status" className="hint">{notice}</p>}
-        <p className="hint">双击空白画面或按 H 隐藏 / 恢复控制。{footer}按 Esc 返回菜单。</p>
+        <details className="help"><summary>使用帮助</summary><p>双击空白处打开或收起面板；打开时滚动自动暂停，收起后继续。拖动标题可移动面板。</p>{help}<p>对比时固定系统亮度与色温。H 显示控制，Esc 返回。</p></details>
       </div>
     </aside>}
   </main>;
@@ -163,20 +209,18 @@ function SmearRunner({ state }) {
   </div>;
 }
 function SmearTest({ onExit }) {
-  const [state, setState] = useState({ isPlaying: true, speed: 480, mode: 'text', direction: 'horizontal', bg: 0, fg: 25, fontSize: 40 });
+  const [state, setState] = useState({ speed: 480, mode: 'text', direction: 'horizontal', bg: 0, fg: 25, fontSize: 40 });
   const update = patch => setState(s => ({ ...s, ...patch }));
-  const pause = () => setState(s => ({ ...s, isPlaying: !s.isPlaying }));
-  return <TestShell title="拖影测试" onExit={onExit} onSpace={pause} footer="空格暂停 / 播放。" controls={<>
-    <button className="primary full-width" onClick={pause}><Icon name={state.isPlaying ? 'pause' : 'play'} />{state.isPlaying ? '暂停滚动' : '开始滚动'}</button>
-    <fieldset><legend>滚动速度 · CSS 像素 / 秒</legend><div className="choices two">{[240, 480, 960, 1920].map(speed => <Choice key={speed} active={speed === state.speed} onClick={() => update({ speed })}>{speed} px/s</Choice>)}</div></fieldset>
+  return <TestShell title="拖影测试" onExit={onExit} help={<p>速度单位为 CSS 像素 / 秒。此页面用于目视观察，不直接测量响应时间或刷新率。</p>} controls={<>
+    <fieldset><legend>速度 · px/s</legend><div className="choices two">{[240, 480, 960, 1920].map(speed => <Choice key={speed} active={speed === state.speed} onClick={() => update({ speed })}>{speed} px/s</Choice>)}</div></fieldset>
     <fieldset><legend>方向</legend><div className="choices two"><Choice active={state.direction === 'horizontal'} onClick={() => update({ direction: 'horizontal' })}><span className="icon-label"><Icon name="back" />向左</span></Choice><Choice active={state.direction === 'vertical'} onClick={() => update({ direction: 'vertical' })}><span className="icon-label"><Icon name="down" />向下</span></Choice></div></fieldset>
     <fieldset><legend>内容</legend><div className="choices two"><Choice active={state.mode === 'text'} onClick={() => update({ mode: 'text' })}>文字</Choice><Choice active={state.mode === 'block'} onClick={() => update({ mode: 'block' })}>纯色方块</Choice></div></fieldset>
     {state.mode === 'text' && <label className="select-label">字号<select value={state.fontSize} onChange={e => update({ fontSize: Number(e.target.value) })}>{[24, 40, 64].map(v => <option key={v} value={v}>{v} CSS px</option>)}</select></label>}
     <fieldset><legend>灰阶预设 · 背景 / 前景</legend><div className="choices">{PRESETS.map(([label, bg, fg]) => <Choice key={label} active={state.bg === bg && state.fg === fg} onClick={() => update({ bg, fg })}>{label}</Choice>)}</div></fieldset>
     <Level label="背景灰阶" value={state.bg} onChange={bg => update({ bg })} /><Level label="前景灰阶" value={state.fg} onChange={fg => update({ fg })} />
     {state.bg === state.fg && <p className="hint">前景与背景相同，当前没有可见边缘。</p>}
-    <p className="hint">跟随文字或方块边缘观察。速度使用 CSS 像素，受浏览器帧率影响；本页不测量响应时间或屏幕刷新率。</p>
-  </>}><SmearRunner state={state} /></TestShell>;
+
+  </>}>{panelOpen => <SmearRunner state={{ ...state, isPlaying: !panelOpen }} />}</TestShell>;
 }
 
 function PatternTest({ onExit }) {
@@ -186,10 +230,9 @@ function PatternTest({ onExit }) {
     gradient: 'linear-gradient(to right, #000, #fff)', dark: 'linear-gradient(to right, #000, #404040)',
     expanded: 'linear-gradient(to right, #000 0%, #050505 10%, #0f0f0f 20%, #1e1e1e 30%, #333 40%, #4d4d4d 50%, #707070 60%, #909090 70%, #b0b0b0 80%, #d0d0d0 90%, #fff 100%)', solid,
   };
-  return <TestShell title="色阶与纯色" onExit={onExit} controls={<>
-    <fieldset><legend>测试图案</legend><div className="choices">{PATTERNS.map(([id, title, desc]) => <Choice key={id} active={pattern === id} onClick={() => setPattern(id)}><span>{title}</span><small>{desc}</small></Choice>)}</div></fieldset>
+  return <TestShell title="色阶与纯色" onExit={onExit} help={<p>近黑分档从左到右：G0、1、2、3、4、6、8、12、16、24、32、48。隐藏面板后观察。</p>} controls={<>
+    <fieldset><legend>图案</legend><div className="choices two">{PATTERNS.map(([id, title]) => <Choice key={id} active={pattern === id} onClick={() => setPattern(id)}><span>{title}</span></Choice>)}</div></fieldset>
     {pattern === 'solid' && <fieldset><legend>纯色</legend><div className="choices three">{SOLIDS.map(([name, value]) => <Choice key={name} active={solid === value} onClick={() => setSolid(value)}>{name}</Choice>)}</div><label className="select-label">自定义颜色<input aria-label="自定义颜色" type="color" value={solid} onChange={e => setSolid(e.target.value)} /></label></fieldset>}
-    <p className="hint">隐藏控制后再观察，测试区域不保留文字、阴影或按钮。近黑分档从左到右递增；渐变用于目视检查，不代表仪器校准结果。</p>
   </>}>
     <div className="test-surface pattern-surface" data-pattern={pattern} style={{ background: backgrounds[pattern] || '#000' }}>
       {pattern === 'steps' && <div className="gray-steps">{[0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48].map(value => <div key={value} style={{ background: gray(value) }} />)}</div>}
@@ -219,13 +262,10 @@ function APLTest({ onExit }) {
     return () => observer.disconnect();
   }, [area]);
   const signalMean = (area / 100 * box + (1 - area / 100) * background) / 255 * 100;
-  return <TestShell title="APL 窗口" onExit={onExit} controls={<>
-    <div className="readout"><span>窗口面积</span><strong>{area}%</strong><span>占当前网页测试区域</span></div>
+  return <TestShell title="APL 窗口" onExit={onExit} help={<><p>面积以当前网页区域为分母。测量前收起面板，避免面板自身发光影响读数。</p><p>平均信号电平按 8 位码值与面积加权，不是实测亮度或线性光 APL。</p></>} controls={<>
     <fieldset><legend>窗口面积比例</legend><div className="choices area-choices">{AREAS.map(value => <Choice key={value} active={value === area} onClick={() => setArea(value)}>{value}%</Choice>)}</div></fieldset>
     <Level label="窗口灰阶" value={box} onChange={setBox} /><Level label="底色灰阶" value={background} onChange={setBackground} />
     <div className="metric"><span>平均信号电平</span><output>{signalMean.toFixed(2)}%</output></div>
-    <p className="hint">按 8 位 RGB 码值和面积加权计算，不是实测亮度或线性光 APL。白窗黑底时，该值等于窗口面积比例。</p>
-    <p className="hint">请隐藏控制后测量：面板也会发光，改变实际平均画面亮度。浏览器工具栏不计入面积；全屏可减少干扰。</p>
   </>}><div className="test-surface apl-surface" ref={surface} style={{ background: gray(background) }}><div className="apl-window" style={{ ...dimensions, background: gray(box) }} /></div></TestShell>;
 }
 
@@ -252,37 +292,33 @@ function useWakeLock(active) {
 }
 function App() {
   const [view, setView] = useState('menu');
-  const [fullscreen, setFullscreen] = useState(Boolean(document.fullscreenElement));
-  const exit = () => setView('menu');
+  const exit = () => {
+    setView('menu');
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  };
+  const enter = id => {
+    setView(id);
+    // Fullscreen must be requested during this user gesture. Unsupported browsers stay usable.
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  };
   useWakeLock(view !== 'menu');
   useEffect(() => {
-    const key = e => { if (e.code === 'Escape') setView('menu'); };
-    const changed = () => setFullscreen(Boolean(document.fullscreenElement));
+    const key = e => { if (e.code === 'Escape') exit(); };
     window.addEventListener('keydown', key);
-    document.addEventListener('fullscreenchange', changed);
-    return () => { window.removeEventListener('keydown', key); document.removeEventListener('fullscreenchange', changed); };
+    return () => window.removeEventListener('keydown', key);
   }, []);
   return <div className="app">
     {view === 'menu' && <main className="menu"><div className="menu-inner">
-      <div className="eyebrow"><span>手机屏幕 · 目视测试</span><span className="offline-badge"><i />离线可用</span></div>
       <h1>装机宅OLED测试</h1>
-      <p className="intro">从拖影到暗部层次，选一项开始观察。</p>
-      <div className="section-label"><span>屏幕测试</span><span>3 项工具</span></div>
       <div className="test-cards">
-        {MENU_TESTS.map((test, index) => <button key={test.id} className={`test-card ${test.tone}`} onClick={() => setView(test.id)}>
-          <span className="card-icon"><Icon name={test.icon} /></span>
-          <span className="card-copy"><span className="card-category">{test.category}<span className="card-number">0{index + 1}</span></span>
-            <span className="card-title">{test.title}</span><span className="card-description">{test.description}</span></span>
-          <span className="card-enter"><Icon name="next" /></span>
+        {MENU_TESTS.map(test => <button key={test.id} className="test-card" onClick={() => enter(test.id)}>
+          <span className="test-art" aria-hidden="true" style={{ backgroundPosition: `${test.position} center` }} />
+          <span className="card-title">{test.title}</span><Icon name="next" />
         </button>)}
       </div>
-      <div className="instructions"><div className="instructions-heading"><Icon name="info" /><strong>测试前准备</strong></div>
-        <p>固定系统亮度，关闭自动亮度、护眼与自适应色温。对比设备时保持环境与设置一致。</p>
-        <div className="gesture-note"><span className="gesture-symbol" aria-hidden="true"><i /><i /></span><span>双击画面，隐藏 / 恢复控制</span></div>
-        <details><summary>全屏、常亮与键盘操作</summary><p>进入测试后可选择全屏。局域网 HTTP 若不能保持常亮，请延长手机自动锁屏时间。键盘 H 隐藏 / 恢复控制，Esc 返回菜单。</p></details>
-      </div>
-      {fullscreen && <button className="quiet-button" onClick={() => document.exitFullscreen().catch(() => {})}><Icon name="collapse" />退出全屏</button>}
-      <footer>浏览器目视测试工具 · 不直接测量亮度、频闪或响应时间</footer>
+      <p className="gesture-hint">双击画面，调出控制面板</p>
     </div></main>}
     {view === 'smear' && <SmearTest onExit={exit} />}
     {view === 'pattern' && <PatternTest onExit={exit} />}
