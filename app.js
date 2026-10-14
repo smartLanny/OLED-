@@ -6,7 +6,7 @@ const {
   useRef
 } = React;
 const gray = value => `rgb(${value}, ${value}, ${value})`;
-const PRESETS = [['近黑 G0 / G15', 0, 15], ['近黑 G0 / G25', 0, 25], ['低灰 G0 / G50', 0, 50], ['夜间 G18 / G220', 18, 220], ['白底 G255 / G0', 255, 0]];
+const PRESETS = [['极低灰阶', 0, 15], ['低灰阶', 0, 25], ['中低灰阶', 0, 50], ['夜间模式', 18, 220], ['白底黑字', 255, 0]];
 const AREAS = [1, 2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100];
 const TEXTS = ['The quick brown fox jumps over the lazy dog. 0123456789', '天地玄黄 宇宙洪荒 日月盈昃 辰宿列张', 'OLED BLACK SMEAR / 灰阶响应观察'];
 const PATTERNS = [['gradient', '全灰阶渐变', 'G0 → G255'], ['dark', '近黑渐变', 'G0 → G64'], ['expanded', '暗部展开渐变', '非线性分布'], ['steps', '近黑分档', 'G0 · 1 · 2 · 3 · 4 · 6 · 8 · 12 · 16 · 24 · 32 · 48'], ['spectrum', '六色渐变', 'RGBCMY → 黑'], ['solid', '纯色检查', '坏点 / 色斑 / 均匀性']];
@@ -15,6 +15,31 @@ function Icon({
   name
 }) {
   const shapes = {
+    settings: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M4 6h4m4 0h8M4 12h10m4 0h2M4 18h2m4 0h10"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "10",
+      cy: "6",
+      r: "2"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "16",
+      cy: "12",
+      r: "2"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "8",
+      cy: "18",
+      r: "2"
+    })),
+    text: /*#__PURE__*/React.createElement("path", {
+      d: "M5 7V4h14v3M12 4v16m-4 0h8"
+    }),
+    block: /*#__PURE__*/React.createElement("rect", {
+      x: "4",
+      y: "5",
+      width: "16",
+      height: "14",
+      rx: "2"
+    }),
     back: /*#__PURE__*/React.createElement("path", {
       d: "m14 6-6 6 6 6M8 12h13"
     }),
@@ -88,20 +113,13 @@ function Level({
   const id = React.useId();
   return /*#__PURE__*/React.createElement("div", {
     className: "level"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "level-heading"
   }, /*#__PURE__*/React.createElement("label", {
     htmlFor: id
-  }, label, /*#__PURE__*/React.createElement("output", null, "G", value)), /*#__PURE__*/React.createElement("div", {
-    className: "level-inputs"
-  }, /*#__PURE__*/React.createElement("input", {
-    id: id,
-    type: "range",
-    min: "0",
-    max: "255",
-    step: "1",
-    value: value,
-    onChange: e => onChange(Number(e.target.value))
-  }), /*#__PURE__*/React.createElement("input", {
+  }, label), /*#__PURE__*/React.createElement("input", {
     type: "number",
+    inputMode: "numeric",
     "aria-label": `${label}数值`,
     min: "0",
     max: "255",
@@ -110,7 +128,15 @@ function Level({
     onChange: e => {
       if (e.target.value !== '') onChange(Math.max(0, Math.min(255, Math.round(Number(e.target.value)))));
     }
-  })));
+  })), /*#__PURE__*/React.createElement("input", {
+    id: id,
+    type: "range",
+    min: "0",
+    max: "255",
+    step: "1",
+    value: value,
+    onChange: e => onChange(Number(e.target.value))
+  }));
 }
 
 // Double-tap opens the complete floating panel; its visibility controls motion.
@@ -283,12 +309,6 @@ function TestShell({
   }, /*#__PURE__*/React.createElement("header", {
     className: "panel-header"
   }, /*#__PURE__*/React.createElement("button", {
-    className: "icon-button",
-    onClick: onExit,
-    "aria-label": "\u8FD4\u56DE\u83DC\u5355"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "back"
-  })), /*#__PURE__*/React.createElement("button", {
     className: "panel-drag",
     "aria-label": `拖动${title}面板`,
     title: "\u62D6\u52A8\u9762\u677F\uFF0C\u6216\u7528\u65B9\u5411\u952E\u79FB\u52A8",
@@ -304,8 +324,14 @@ function TestShell({
       dragRef.current = null;
     },
     onKeyDown: moveByKey
-  }, /*#__PURE__*/React.createElement("span", null, title), /*#__PURE__*/React.createElement(Icon, {
-    name: "move"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "settings"
+  }), /*#__PURE__*/React.createElement("span", null, title)), /*#__PURE__*/React.createElement("button", {
+    className: "icon-button",
+    onClick: onExit,
+    "aria-label": "\u8FD4\u56DE\u83DC\u5355"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "back"
   })), /*#__PURE__*/React.createElement("button", {
     className: "icon-button",
     "aria-label": "\u6536\u8D77\u9762\u677F",
@@ -440,15 +466,15 @@ function SmearTest({
     title: "\u62D6\u5F71\u6D4B\u8BD5",
     onExit: onExit,
     help: /*#__PURE__*/React.createElement("p", null, "\u7AD6\u5C4F\u4E0A\u4E0B\u6EDA\u52A8\uFF0C\u6A2A\u5C4F\u5DE6\u53F3\u6EDA\u52A8\u3002\u901F\u5EA6\u5355\u4F4D\u4E3A CSS \u50CF\u7D20 / \u79D2\u3002\u6B64\u9875\u9762\u7528\u4E8E\u76EE\u89C6\u89C2\u5BDF\uFF0C\u4E0D\u76F4\u63A5\u6D4B\u91CF\u54CD\u5E94\u65F6\u95F4\u6216\u5237\u65B0\u7387\u3002"),
-    controls: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u901F\u5EA6 \xB7 px/s"), /*#__PURE__*/React.createElement("div", {
+    controls: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u6EDA\u52A8\u901F\u5EA6 \xB7 px/s"), /*#__PURE__*/React.createElement("div", {
       className: "choices two"
-    }, [240, 480, 960, 1920].map(speed => /*#__PURE__*/React.createElement(Choice, {
+    }, [[240, '慢速'], [480, '中速'], [960, '高速'], [1920, '极速']].map(([speed, label]) => /*#__PURE__*/React.createElement(Choice, {
       key: speed,
       active: speed === state.speed,
       onClick: () => update({
         speed
       })
-    }, speed, " px/s")))), /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u6EDA\u52A8\u65B9\u5411"), /*#__PURE__*/React.createElement("div", {
+    }, label, " (", speed, ")")))), /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u6EDA\u52A8\u65B9\u5411"), /*#__PURE__*/React.createElement("div", {
       className: "choices two"
     }, /*#__PURE__*/React.createElement(Choice, {
       active: !state.reverse,
@@ -475,12 +501,20 @@ function SmearTest({
       onClick: () => update({
         mode: 'text'
       })
-    }, "\u6587\u5B57"), /*#__PURE__*/React.createElement(Choice, {
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "icon-label"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "text"
+    }), "\u6587\u5B57")), /*#__PURE__*/React.createElement(Choice, {
       active: state.mode === 'block',
       onClick: () => update({
         mode: 'block'
       })
-    }, "\u7EAF\u8272\u65B9\u5757"))), state.mode === 'text' && /*#__PURE__*/React.createElement("label", {
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "icon-label"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "block"
+    }), "\u7EAF\u8272\u65B9\u5757")))), state.mode === 'text' && /*#__PURE__*/React.createElement("label", {
       className: "select-label"
     }, "\u5B57\u53F7", /*#__PURE__*/React.createElement("select", {
       value: state.fontSize,
@@ -491,7 +525,7 @@ function SmearTest({
       key: v,
       value: v
     }, v, " CSS px")))), /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u7070\u9636\u9884\u8BBE \xB7 \u80CC\u666F / \u524D\u666F"), /*#__PURE__*/React.createElement("div", {
-      className: "choices"
+      className: "choices preset-choices"
     }, PRESETS.map(([label, bg, fg]) => /*#__PURE__*/React.createElement(Choice, {
       key: label,
       active: state.bg === bg && state.fg === fg,
@@ -499,7 +533,25 @@ function SmearTest({
         bg,
         fg
       })
-    }, label)))), /*#__PURE__*/React.createElement(Level, {
+    }, /*#__PURE__*/React.createElement("span", null, label, " ", /*#__PURE__*/React.createElement("span", {
+      className: "preset-values"
+    }, "(G", bg, "/G", fg, ")")), /*#__PURE__*/React.createElement("span", {
+      className: "swatches",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("i", {
+      style: {
+        background: gray(bg)
+      }
+    }), /*#__PURE__*/React.createElement("i", {
+      style: {
+        background: gray(fg)
+      }
+    })))))), /*#__PURE__*/React.createElement("section", {
+      className: "manual-levels",
+      "aria-label": "\u624B\u52A8\u5FAE\u8C03"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "section-label"
+    }, "\u624B\u52A8\u5FAE\u8C03 \xB7 0\u2013255"), /*#__PURE__*/React.createElement(Level, {
       label: "\u80CC\u666F\u7070\u9636",
       value: state.bg,
       onChange: bg => update({
@@ -511,7 +563,7 @@ function SmearTest({
       onChange: fg => update({
         fg
       })
-    }), state.bg === state.fg && /*#__PURE__*/React.createElement("p", {
+    })), state.bg === state.fg && /*#__PURE__*/React.createElement("p", {
       className: "hint"
     }, "\u524D\u666F\u4E0E\u80CC\u666F\u76F8\u540C\uFF0C\u5F53\u524D\u6CA1\u6709\u53EF\u89C1\u8FB9\u7F18\u3002"))
   }, panelOpen => /*#__PURE__*/React.createElement(SmearRunner, {
@@ -550,7 +602,15 @@ function PatternTest({
       key: name,
       active: solid === value,
       onClick: () => setSolid(value)
-    }, name))), /*#__PURE__*/React.createElement("label", {
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "solid-label"
+    }, /*#__PURE__*/React.createElement("i", {
+      className: "color-dot",
+      style: {
+        background: value
+      },
+      "aria-hidden": "true"
+    }), name)))), /*#__PURE__*/React.createElement("label", {
       className: "select-label"
     }, "\u81EA\u5B9A\u4E49\u989C\u8272", /*#__PURE__*/React.createElement("input", {
       "aria-label": "\u81EA\u5B9A\u4E49\u989C\u8272",
@@ -623,7 +683,10 @@ function APLTest({
       key: value,
       active: value === area,
       onClick: () => setArea(value)
-    }, value, "%")))), /*#__PURE__*/React.createElement(Level, {
+    }, value, "%")))), /*#__PURE__*/React.createElement("section", {
+      className: "manual-levels",
+      "aria-label": "\u7070\u9636\u8C03\u6574"
+    }, /*#__PURE__*/React.createElement(Level, {
       label: "\u7A97\u53E3\u7070\u9636",
       value: box,
       onChange: setBox
@@ -631,7 +694,7 @@ function APLTest({
       label: "\u5E95\u8272\u7070\u9636",
       value: background,
       onChange: setBackground
-    }), /*#__PURE__*/React.createElement("div", {
+    })), /*#__PURE__*/React.createElement("div", {
       className: "metric"
     }, /*#__PURE__*/React.createElement("span", null, "\u5E73\u5747\u4FE1\u53F7\u7535\u5E73"), /*#__PURE__*/React.createElement("output", null, signalMean.toFixed(2), "%")))
   }, /*#__PURE__*/React.createElement("div", {
