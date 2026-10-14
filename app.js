@@ -18,6 +18,12 @@ function Icon({
     back: /*#__PURE__*/React.createElement("path", {
       d: "m14 6-6 6 6 6M8 12h13"
     }),
+    right: /*#__PURE__*/React.createElement("path", {
+      d: "M3 12h17m-6-6 6 6-6 6"
+    }),
+    up: /*#__PURE__*/React.createElement("path", {
+      d: "M12 21V4m-6 6 6-6 6 6"
+    }),
     down: /*#__PURE__*/React.createElement("path", {
       d: "M12 3v17m-6-6 6 6 6-6"
     }),
@@ -110,6 +116,7 @@ function Level({
 // Double-tap opens the complete floating panel; its visibility controls motion.
 function TestShell({
   title,
+  tone,
   onExit,
   children,
   controls,
@@ -245,7 +252,7 @@ function TestShell({
     }));
   };
   return /*#__PURE__*/React.createElement("main", {
-    className: "test-shell",
+    className: `test-shell tone-${tone}`,
     ref: shellRef,
     onMouseDownCapture: e => {
       if (suppressClick.current) e.preventDefault();
@@ -330,7 +337,8 @@ function SmearRunner({
   const unit = useRef(null);
   const position = useRef(0);
   const [size, setSize] = useState(0);
-  const vertical = state.direction === 'vertical';
+  const vertical = state.vertical;
+  const offsetAt = distance => state.reverse ? -distance : -size + distance;
   useLayoutEffect(() => {
     position.current = 0;
     const measure = () => {
@@ -345,9 +353,9 @@ function SmearRunner({
   useLayoutEffect(() => {
     if (!size) return;
     position.current %= size;
-    const offset = vertical ? -size + position.current % size : -(position.current % size);
+    const offset = offsetAt(position.current % size);
     track.current.style.transform = vertical ? `translate3d(0,${offset}px,0)` : `translate3d(${offset}px,0,0)`;
-  }, [size, vertical, state.mode, state.fontSize]);
+  }, [size, vertical, state.reverse, state.mode, state.fontSize]);
   useEffect(() => {
     let frame;
     let last = null;
@@ -358,7 +366,7 @@ function SmearRunner({
         if (dt < 0.25) position.current = (position.current + state.speed * dt) % size;
       }
       last = time;
-      const offset = vertical ? -size + position.current : -position.current;
+      const offset = offsetAt(position.current);
       track.current.style.transform = vertical ? `translate3d(0,${offset}px,0)` : `translate3d(${offset}px,0,0)`;
       frame = requestAnimationFrame(draw);
     };
@@ -373,7 +381,7 @@ function SmearRunner({
       cancelAnimationFrame(frame);
       document.removeEventListener('visibilitychange', sync);
     };
-  }, [state.isPlaying, state.speed, size, vertical]);
+  }, [state.isPlaying, state.speed, state.reverse, size, vertical]);
   return /*#__PURE__*/React.createElement("div", {
     className: "test-surface smear-surface",
     style: {
@@ -407,10 +415,18 @@ function SmearRunner({
 function SmearTest({
   onExit
 }) {
+  const [vertical, setVertical] = useState(() => !window.matchMedia('(orientation: landscape)').matches);
+  useEffect(() => {
+    const orientation = window.matchMedia('(orientation: landscape)');
+    const changed = () => setVertical(!orientation.matches);
+    changed();
+    orientation.addEventListener('change', changed);
+    return () => orientation.removeEventListener('change', changed);
+  }, []);
   const [state, setState] = useState({
     speed: 480,
     mode: 'text',
-    direction: 'horizontal',
+    reverse: false,
     bg: 0,
     fg: 25,
     fontSize: 40
@@ -420,9 +436,10 @@ function SmearTest({
     ...patch
   }));
   return /*#__PURE__*/React.createElement(TestShell, {
+    tone: "smear",
     title: "\u62D6\u5F71\u6D4B\u8BD5",
     onExit: onExit,
-    help: /*#__PURE__*/React.createElement("p", null, "\u901F\u5EA6\u5355\u4F4D\u4E3A CSS \u50CF\u7D20 / \u79D2\u3002\u6B64\u9875\u9762\u7528\u4E8E\u76EE\u89C6\u89C2\u5BDF\uFF0C\u4E0D\u76F4\u63A5\u6D4B\u91CF\u54CD\u5E94\u65F6\u95F4\u6216\u5237\u65B0\u7387\u3002"),
+    help: /*#__PURE__*/React.createElement("p", null, "\u7AD6\u5C4F\u4E0A\u4E0B\u6EDA\u52A8\uFF0C\u6A2A\u5C4F\u5DE6\u53F3\u6EDA\u52A8\u3002\u901F\u5EA6\u5355\u4F4D\u4E3A CSS \u50CF\u7D20 / \u79D2\u3002\u6B64\u9875\u9762\u7528\u4E8E\u76EE\u89C6\u89C2\u5BDF\uFF0C\u4E0D\u76F4\u63A5\u6D4B\u91CF\u54CD\u5E94\u65F6\u95F4\u6216\u5237\u65B0\u7387\u3002"),
     controls: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u901F\u5EA6 \xB7 px/s"), /*#__PURE__*/React.createElement("div", {
       className: "choices two"
     }, [240, 480, 960, 1920].map(speed => /*#__PURE__*/React.createElement(Choice, {
@@ -431,27 +448,27 @@ function SmearTest({
       onClick: () => update({
         speed
       })
-    }, speed, " px/s")))), /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u65B9\u5411"), /*#__PURE__*/React.createElement("div", {
+    }, speed, " px/s")))), /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u6EDA\u52A8\u65B9\u5411"), /*#__PURE__*/React.createElement("div", {
       className: "choices two"
     }, /*#__PURE__*/React.createElement(Choice, {
-      active: state.direction === 'horizontal',
+      active: !state.reverse,
       onClick: () => update({
-        direction: 'horizontal'
+        reverse: false
       })
     }, /*#__PURE__*/React.createElement("span", {
       className: "icon-label"
     }, /*#__PURE__*/React.createElement(Icon, {
-      name: "back"
-    }), "\u5411\u5DE6")), /*#__PURE__*/React.createElement(Choice, {
-      active: state.direction === 'vertical',
+      name: vertical ? 'down' : 'right'
+    }), vertical ? '向下' : '向右')), /*#__PURE__*/React.createElement(Choice, {
+      active: state.reverse,
       onClick: () => update({
-        direction: 'vertical'
+        reverse: true
       })
     }, /*#__PURE__*/React.createElement("span", {
       className: "icon-label"
     }, /*#__PURE__*/React.createElement(Icon, {
-      name: "down"
-    }), "\u5411\u4E0B")))), /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u5185\u5BB9"), /*#__PURE__*/React.createElement("div", {
+      name: vertical ? 'up' : 'back'
+    }), vertical ? '向上' : '向左')))), /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u5185\u5BB9"), /*#__PURE__*/React.createElement("div", {
       className: "choices two"
     }, /*#__PURE__*/React.createElement(Choice, {
       active: state.mode === 'text',
@@ -500,6 +517,7 @@ function SmearTest({
   }, panelOpen => /*#__PURE__*/React.createElement(SmearRunner, {
     state: {
       ...state,
+      vertical,
       isPlaying: !panelOpen
     }
   }));
@@ -510,15 +528,16 @@ function PatternTest({
   const [pattern, setPattern] = useState('gradient');
   const [solid, setSolid] = useState('#000000');
   const backgrounds = {
-    gradient: 'linear-gradient(to right, #000, #fff)',
-    dark: 'linear-gradient(to right, #000, #404040)',
-    expanded: 'linear-gradient(to right, #000 0%, #050505 10%, #0f0f0f 20%, #1e1e1e 30%, #333 40%, #4d4d4d 50%, #707070 60%, #909090 70%, #b0b0b0 80%, #d0d0d0 90%, #fff 100%)',
+    gradient: 'linear-gradient(to bottom, #000, #fff)',
+    dark: 'linear-gradient(to bottom, #000, #404040)',
+    expanded: 'linear-gradient(to bottom, #000 0%, #050505 10%, #0f0f0f 20%, #1e1e1e 30%, #333 40%, #4d4d4d 50%, #707070 60%, #909090 70%, #b0b0b0 80%, #d0d0d0 90%, #fff 100%)',
     solid
   };
   return /*#__PURE__*/React.createElement(TestShell, {
+    tone: "pattern",
     title: "\u8272\u9636\u4E0E\u7EAF\u8272",
     onExit: onExit,
-    help: /*#__PURE__*/React.createElement("p", null, "\u8FD1\u9ED1\u5206\u6863\u4ECE\u5DE6\u5230\u53F3\uFF1AG0\u30011\u30012\u30013\u30014\u30016\u30018\u300112\u300116\u300124\u300132\u300148\u3002\u9690\u85CF\u9762\u677F\u540E\u89C2\u5BDF\u3002"),
+    help: /*#__PURE__*/React.createElement("p", null, "\u8FD1\u9ED1\u5206\u6863\u4ECE\u4E0A\u5230\u4E0B\uFF1AG0\u30011\u30012\u30013\u30014\u30016\u30018\u300112\u300116\u300124\u300132\u300148\u3002\u9690\u85CF\u9762\u677F\u540E\u89C2\u5BDF\u3002"),
     controls: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("fieldset", null, /*#__PURE__*/React.createElement("legend", null, "\u56FE\u6848"), /*#__PURE__*/React.createElement("div", {
       className: "choices two"
     }, PATTERNS.map(([id, title]) => /*#__PURE__*/React.createElement(Choice, {
@@ -557,7 +576,7 @@ function PatternTest({
   }, ['#f00', '#0f0', '#00f', '#0ff', '#f0f', '#ff0'].map(color => /*#__PURE__*/React.createElement("div", {
     key: color,
     style: {
-      background: `linear-gradient(to right, ${color}, #000)`
+      background: `linear-gradient(to bottom, ${color}, #000)`
     }
   })))));
 }
@@ -594,6 +613,7 @@ function APLTest({
   }, [area]);
   const signalMean = (area / 100 * box + (1 - area / 100) * background) / 255 * 100;
   return /*#__PURE__*/React.createElement(TestShell, {
+    tone: "apl",
     title: "APL \u7A97\u53E3",
     onExit: onExit,
     help: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", null, "\u9762\u79EF\u4EE5\u5F53\u524D\u7F51\u9875\u533A\u57DF\u4E3A\u5206\u6BCD\u3002\u6D4B\u91CF\u524D\u6536\u8D77\u9762\u677F\uFF0C\u907F\u514D\u9762\u677F\u81EA\u8EAB\u53D1\u5149\u5F71\u54CD\u8BFB\u6570\u3002"), /*#__PURE__*/React.createElement("p", null, "\u5E73\u5747\u4FE1\u53F7\u7535\u5E73\u6309 8 \u4F4D\u7801\u503C\u4E0E\u9762\u79EF\u52A0\u6743\uFF0C\u4E0D\u662F\u5B9E\u6D4B\u4EAE\u5EA6\u6216\u7EBF\u6027\u5149 APL\u3002")),
@@ -689,7 +709,7 @@ function App() {
     className: "test-cards"
   }, MENU_TESTS.map(test => /*#__PURE__*/React.createElement("button", {
     key: test.id,
-    className: "test-card",
+    className: `test-card tone-${test.id}`,
     onClick: () => enter(test.id)
   }, /*#__PURE__*/React.createElement("span", {
     className: "test-art",
